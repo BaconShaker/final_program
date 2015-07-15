@@ -28,7 +28,7 @@ class Collection():
 	
 	def __init__(self, inputs):
 		# Bring in the input dictionary and store it to self for later reference
-		print "\n\n\ninputs from Collection: " , inputs
+		# print "\n\n\ninputs from Collection: " , inputs
 		self.route = {
 						"Total Distance" : inputs["Total Distance"],
 						"Number of Stops" : inputs["Number of Stops"]

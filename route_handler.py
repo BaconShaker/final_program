@@ -120,6 +120,7 @@ class Route_Manager(object):
 		number_of_stops = len(filtered) # INT
 
 		collections = []
+		dprice = self.diesel_lookup()
 
 		for stop in filtered:
 			# Need to add some things to the input dict before
@@ -128,18 +129,20 @@ class Route_Manager(object):
 			stop['Number of Stops'] = number_of_stops
 			stop['Oil Price'] = self.yg_price
 			stop['Service Fee'] = 0.15
-			stop['Diesel Price'] = self.diesel_lookup()
+			stop['Diesel Price'] = dprice
 
 			Collection(stop)
 
 			collections += [stop]
 
+
+
 		# collections = [Collection(stop) for stop in filtered]
 
-		for c in collections:
-			print c
+		# for c in collections:
+		# 	print c
 
-
+		return collections
 
 
 		
