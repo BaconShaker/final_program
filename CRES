@@ -1,0 +1,70 @@
+#!./GoogleDrive/all_in_one/bin/python
+
+# This is the MAIN PAGE for the CRES Program.
+
+# Functionality should include:
+# 	Building a pickup route
+# 		Run the route
+# 		Add Data to CSV files
+# 		Send pickup notices/reciepts 
+# 			prior to pickup? 
+# 			post collection results
+# 	Browsing client/location details/statistics
+# 		Provide to website?
+
+from sql_ops import *
+
+# Check if the database is up and running. 
+check_sql = CRES_SQL()
+check_sql.is_running()
+
+# Cheating...
+mods = 1
+while mods == 1:
+	try:
+		from tabulate import tabulate #makes the nice tables
+		import os.path #pathfinder
+		import time #this is for any delays I want
+		import sys
+		import os
+		from os import listdir
+		import csv
+		import urllib
+		import urllib2
+		from bs4 import BeautifulSoup           # pip install BeautifulS
+		from datetime import date
+		import thread
+		# main_manipulator has Data_Manager()
+		from main_manipulator import *
+		from route_handler import *
+		
+
+	except ImportError as err:
+		print "Something didn't work right.\n"
+		print "You don't have all the required modules on this computer."
+		print  err.args
+
+	mods = 0
+
+
+
+
+# Now that all the modules are in place, create a database instance and pass it the proper config details from the config file. 
+
+
+database_main = Data_Manager()
+
+route = Route_Manager(database_main)
+routelist = route.run_route() # LIST OF DICTS
+
+
+
+
+# build() needs to return something in the form of:
+# [ stop number, name, address, city, zip, contact email, phone number, contact name, date, charity, average donation, notes ]
+
+
+
+
+
+
