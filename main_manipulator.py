@@ -58,34 +58,34 @@ class Data_Manager():
 	def list_names(self):
 		print self.location_names
 
-	# def route_length(self, routelist):
-	# 	# Take the list of routes on a pickup and return
-	# 	# 	a list with all the pertinant info to pass to collections
-	# 	# 	and make receipts.
-	# 	route = []
-	# 	starts = []
-	# 	stops = []
-	# 	for stopdict in routelist:
-	# 		route_info = self.get_location_details( stopdict["Location"] )
-	# 		route += [ str(route_info[0]) + " " + str(route_info[1]) + " " + str(route_info[2]) ]
+	def add_dict_to_db(self, tablename, rowdict):
+		# This function adds a dictionary row to the specified table 
+		# in the CRES database
+		print 'add_dict_to_db( tablename, rowdict )'
+		print 'tablename: ', tablename
+		print 'rowdict: ', rowdict
 
-		
-	# 	# Make two lists with starts and stops to zip together
-	# 	#	pass the result to googlemaps. 
-	# 	starts += route
-	# 	starts.insert(0, ("2021 W. Fulton Chicago 60612") )
-	# 	stops += route 
-	# 	stops.append(("2021 W. Fulton Chicago 60612"))
-	# 	legs = zip(starts, stops)
+		# filter out keys that are not column names
+		# you have to add new columns in the sqladmin page
+		cursor.execute("describe %s" % tablename)
+		allowed_keys = set(row[0] for row in cursor.fetchall())
+		keys = allowed_keys.intersection(rowdict)
 
-	# 	total_dist = GoogleMap(legs).google_directions()
+		if len(rowdict) > len(keys):
+			unknown_keys = set(rowdict) - allowed_keys
+			print "\n\nskipping keys:", ", ".join(unknown_keys)
 
+		columns = "`" + "`,`".join(keys) + "`"
 
-	# 	return total_dist
+		values_template = ", ".join(["%s"] * len(keys))
+		values = tuple(rowdict[key] for key in keys)
 
-		
+		sql = 'insert into %s (%s) values %s' % (
+			tablename, columns, values)
 
-
+		print "\n This is the SQL line: ", sql
+		cursor.execute(sql)
+		db.commit()
 
 
 

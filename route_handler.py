@@ -134,14 +134,9 @@ class Route_Manager(object):
 			Collection(stop)
 
 			collections += [stop]
-
-
-
 		# collections = [Collection(stop) for stop in filtered]
-
 		# for c in collections:
 		# 	print c
-
 		return collections
 
 
@@ -163,11 +158,9 @@ class Route_Manager(object):
 		# for response in gform_responses:
 		# 	print response
 
-
 		# Try to make it so you can see all the pickups. 
 		#	May be easier to do SQL queries. 
 		# if date_picker == 'all':
-
 
 		# print "Date:", date_picker
 
@@ -199,7 +192,6 @@ class Route_Manager(object):
 			route_info = self.data.get_location_details( stopdict["Location"] )
 			route += [ str(route_info[0]) + " " + str(route_info[1]) + " " + str(route_info[2]) ]
 
-		
 		# Make two lists with starts and stops to zip together
 		#	pass the result to googlemaps. 
 		starts += route
@@ -210,8 +202,18 @@ class Route_Manager(object):
 
 		total_dist = GoogleMap(legs).google_directions()
 
-
 		return total_dist
+
+	def add_collections_to_db(self, collections):
+		for leg in collections:
+			leg['Pickup Date'] = leg['Pickup Date'].split("/")
+			leg['Pickup Date'] = leg['Pickup Date'][2] + "-" + leg['Pickup Date'][0] + "-" + leg['Pickup Date'][1]
+
+
+			leg['Arrival'] = leg["Height on Arrival"]
+			leg['Departure'] = leg["Height on Departure"]
+			
+			self.data.add_dict_to_db("Pickups", leg)
 
 	
 

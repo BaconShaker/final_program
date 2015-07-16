@@ -5,6 +5,7 @@
 
 import subprocess
 import time
+import os
 
 
 
@@ -24,10 +25,10 @@ class CRES_SQL(object):
 
 		if is_on != 0:
 
-
+			os.system('open -a MAMP')
 			print "MySql was not running so I started it for you."
 			print ""
-			subprocess.call( ['/Users/AsianCheddar/GoogleDrive/all_in_one/startSql.sh'] )
+			# subprocess.call( ['/Users/AsianCheddar/GoogleDrive/all_in_one/startSql.sh'] )
 			# subprocess.call(['clear'])
 			time.sleep(3)
 

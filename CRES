@@ -13,15 +13,18 @@
 # 		Provide to website?
 
 from sql_ops import *
+# import os
 
 # Check if the database is up and running. 
 check_sql = CRES_SQL()
 check_sql.is_running()
 
+
 # Cheating...
 mods = 1
 while mods == 1:
 	try:
+
 		from tabulate import tabulate #makes the nice tables
 		import os.path #pathfinder
 		import time #this is for any delays I want
@@ -57,7 +60,7 @@ database_main = Data_Manager()
 route = Route_Manager(database_main)
 collection_list = route.run_route() # LIST OF DICTS
 
-print collection_list
+route.add_collections_to_db(collection_list)
 
 
 
