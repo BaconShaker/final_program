@@ -1,0 +1,8 @@
+*.pyc
+__init__.py
+*.gsheet
+*gform
+*.json
+stopSql.sh
+startSql.sh
+update.command

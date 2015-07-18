@@ -4,6 +4,7 @@
 from tabulate import tabulate
 from datetime import *
 
+print "Imported Collections"
 # Variables we need:
 # 	location
 # 	height on arrivial
@@ -141,27 +142,11 @@ class Collection():
 			
 		print '\n\n'  , self.indict ,  "\n\n"
 
-
+		print "Collection.run()"
 		return self.indict
 
 		
 
-
-
-
-
-
-print "This is on the outside"
-
-
-		
-
-
-
-
-
-# Output:
-print "End of collection\n"
 
 
 if __name__ == '__main__':
