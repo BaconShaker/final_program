@@ -6,3 +6,4 @@ __init__.py
 stopSql.sh
 startSql.sh
 update.command
+MAMP_db

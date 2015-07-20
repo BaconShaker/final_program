@@ -22,4 +22,16 @@ else
 	pip install -r $req_file
 fi
 
+mamp=$(find ~/G*/all_in_one -iname MAMP_db)
+echo $mamp
+cd /Applications/MAMP
+
+if [[ -L db  ]]; then
+	echo "db already was a link, but let's get rid of it and make sure it points to the right spot."
+	rm -rf db
+	# echo $mamper
+	ln -s $mamp db
+fi
+
+
 chmod 771 ~/GoogleDrive/all_in_one/CRES.command
