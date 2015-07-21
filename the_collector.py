@@ -79,15 +79,8 @@ class Collection():
 		
 		# Need to account for the penalty associated with poor quality in the income that CRES will get
 		# Revenue - (Income + Donation) = | Excess / Penalty |
-		
-		# This should dissappear
-		
 
 		self.indict = inputs
-
-		print "\n\n 	INDICT "
-		print tabulate( [( e, self.indict[e] ) for e in self.indict] , ["Key", "Value"])
-		
 
 		# Need to calculate the fuel surcharge, this is the program that
 		# takes care of that. The inputs are continued below. 
@@ -126,7 +119,10 @@ class Collection():
 		self.indict['Expected Income'] = self.indict['Expected Income'] + f_surcharge
 		self.indict['Expected Donation'] = self.indict['Expected Donation'] - f_surcharge
 
+		print "\n\n 	Summary for", self.indict['Location']
+		print tabulate( [( e, self.indict[e] ) for e in self.indict] , ["Key", "Value"])
 		
+
 		# print tabulate(  [ ( key , self.indict[key] ) for key in self.indict  ]  )
 
 		#This is a debugging checker.
@@ -135,14 +131,21 @@ class Collection():
 		# print "This 0 =", self.indict['Expected Revenue'] - self.indict['Expected Income'] - self.indict['Expected Donation'] - self.indict['Fuel Surcharge']
 
 	# Make anobject that outside programs can return and use
-	def run(self):
-		if len(self.indict["Pickup Date"]) == 0:
-			da = datetime.now().date()
-			self.indict['Pickup Date'] = str(da)
+	def run_checks(self):
+		
 			
 		print '\n\n'  , self.indict ,  "\n\n"
 
-		print "Collection.run()"
+		print "Collection.run_checks()"
+		print "Checker:" ,
+		if self.indict["Expected Income"] > self.indict["Expected Revenue"]:
+			print "\n********** ********** ***********"
+			print "THIS COLLECTION IS RESULTING IN A CHARGE TO ", self.indict["Location"]
+			print "********** ********** ***********\n"		
+		else: 
+			print "CRES Income is < Expected Revenue.. Check!"
+
+		
 		return self.indict
 
 		

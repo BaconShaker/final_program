@@ -1,5 +1,6 @@
-#!/Users/AsianCheddar/GoogleDrive/all_in_one/bin/python
+#!/envs/CRES/bin/python
 
+import os
 import mysql.connector
 from datetime import *
 import numpy
@@ -83,16 +84,40 @@ class Data_Manager():
 		sql = 'insert into %s (%s) values %s' % (
 			tablename, columns, values)
 
-		print "\n This is the SQL line: ", sql
-		cursor.execute(sql)
-		db.commit()
+		os.system('clear')
+
+		print "\n\n This is the SQL query: ", sql
+
+		
+		print "\n Would you like to execute the above statement?"
+		ask = raw_input('y/n:')
+		while ask != 'y':
+			if ask =="n":
+				os.system('clear')
+				print "Nothing was added, gonna have to start over. "
+				break
+			else:
+				print "Did you mean to hit another button? Here, try again."
+				ask = raw_input('y/n:')
+
+		else: 
+			cursor.execute(sql)
+			db.commit()
+			os.system('clear')
+			print "\n\n\nJolly good mate! I added the collections to the database, you're all good to go! "
 
 
 
+	def charity_lookup(self, location):
+		query = 'SELECT `Charity` FROM Locations WHERE `Name` = "%s"' % (location)
+		cursor.execute(query)
+		charity_name = cursor.fetchall()
+		return str(charity_name[0][0])
 
-	def build_route(self, routelist):
-		print "This is build route"
-		print "the route is ", self.route_length(routelist) , "miles long."
+
+	# def build_route(self, routelist):
+	# 	print "This is build route"
+	# 	print "the route is ", self.route_length(routelist) , "miles long."
 
 		
 
@@ -124,5 +149,7 @@ class Data_Manager():
 if __name__ == '__main__':
 	writer = Data_Manager()
 	# writer.list_names()
+	r = writer.charity_lookup("Vinyl")
+	print r
 		
 		

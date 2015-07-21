@@ -87,7 +87,8 @@ class Route_Manager(object):
 		print "yg price:", self.yg_price_text
 		print "ams_location", self.ams_location
 
-		self.yg_price = float(raw_input("\n 	What is the price of YG you want to use for this batch of Collections?	"))
+		self.yg_price = float(raw_input("\n What is the price of YG you want to use for this batch of Collections?	"))
+		self.yg_price = self.yg_price / 100
 
 	def	diesel_lookup(self):
 		print "\nStart of price_of_diesel()\n"
@@ -125,13 +126,15 @@ class Route_Manager(object):
 		for stop in filtered:
 			# Need to add some things to the input dict before
 			#	passing it through Collections. 
+			stop['Charity'] = self.data.charity_lookup(stop['Location'])
 			stop['Total Distance'] = total_distance
 			stop['Number of Stops'] = number_of_stops
-			stop['Oil Price'] = self.yg_price
+			stop['Oil Price'] = self.yg_price 
 			stop['Service Fee'] = 0.15
 			stop['Diesel Price'] = dprice
 
-			Collection(stop)
+
+			Collection(stop).run_checks()
 
 			collections += [stop]
 		# collections = [Collection(stop) for stop in filtered]

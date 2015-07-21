@@ -79,6 +79,8 @@ def main():
 	route = Route_Manager(database_main)
 	collection_list = route.run_route() # LIST OF DICTS
 
+	
+
 	route.add_collections_to_db(collection_list)
 
 
