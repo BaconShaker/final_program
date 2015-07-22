@@ -62,6 +62,7 @@ class Data_Manager():
 	def add_dict_to_db(self, tablename, rowdict):
 		# This function adds a dictionary row to the specified table 
 		# in the CRES database
+		print "This function will add the dictionary provided to the table specified."
 		print 'add_dict_to_db( tablename, rowdict )'
 		print 'tablename: ', tablename
 		print 'rowdict: ', rowdict
@@ -74,7 +75,7 @@ class Data_Manager():
 
 		if len(rowdict) > len(keys):
 			unknown_keys = set(rowdict) - allowed_keys
-			print "\n\nskipping keys:", ", ".join(unknown_keys)
+			# print "\n\nskipping keys:", ", ".join(unknown_keys)
 
 		columns = "`" + "`,`".join(keys) + "`"
 
@@ -88,6 +89,9 @@ class Data_Manager():
 
 		print "\n\n This is the SQL query: ", sql
 
+		# As of 7/21 this part will add any collections in a list of collections
+		# to the database. I want to change that so it either doesn't add any unless the whole list 
+		# is ok, or make it so it checks for similar entries and updates rather than cancel out. 
 		
 		print "\n Would you like to execute the above statement?"
 		ask = raw_input('y/n:')

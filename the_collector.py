@@ -121,7 +121,7 @@ class Collection():
 
 		print "\n\n 	Summary for", self.indict['Location']
 		print tabulate( [( e, self.indict[e] ) for e in self.indict] , ["Key", "Value"])
-		
+		print "\n End of Collector.__init__()\n"
 
 		# print tabulate(  [ ( key , self.indict[key] ) for key in self.indict  ]  )
 
@@ -134,9 +134,9 @@ class Collection():
 	def run_checks(self):
 		
 			
-		print '\n\n'  , self.indict ,  "\n\n"
+		# print '\n\n'  , self.indict ,  "\n\n"
 
-		print "Collection.run_checks()"
+		print "Collection.run_checks()\n"
 		print "Checker:" ,
 		if self.indict["Expected Income"] > self.indict["Expected Revenue"]:
 			print "\n********** ********** ***********"
