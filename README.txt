@@ -1,21 +1,24 @@
 # final_program
+
+Ok I changed some things and put all the scripting into one. 
+Just copy and paste the first three lines one at a time. The line with the ** (but not the **) should be the only difference from last time. 
+
+************************************************************************************
+
 Installation instructions:
     Open Terminal
     	cd ~/GoogleDrive/all_in_one
     	chmod 755 install.command
-    Double click install.command in the finder window.
-    	A bunch of stuff shoud whiz by on the Terminal screen...
+    **  sudo ./install.command
 
     Everything should be installed...
     	See if MAMP works.
     	Quit MAMP
     	Run the program (by double clicking CRES.command)
-    		Everything should work! 
-    		Or it won't and you'll see something like "Access Denied"
-    			That's not what we want so go back to Terminal..
-    				cd ~/GoogleDrive/all_in_one
-    				chmod 755 CRES.command
     		Now everything should be running smoothly..?
+
+
+************************************************************************************
 
 If MAMP isn't working...
 

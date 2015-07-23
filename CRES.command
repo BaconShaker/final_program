@@ -52,8 +52,10 @@ while mods == 1:
 		print  err.args
 
 		installer = os.path.expanduser('~/GoogleDrive/all_in_one/install.command')
-		subprocess.call([installer])
+		subprocess.call(['sudo', installer])
 
+		print '\n\n\nIF YOU SEE THIS GOING IN A LOOP, HIT CTRL + OPTION + "C"\n\n\n'
+		time.sleep(5)
 		# updater = os.path.expanduser('~/GoogleDrive/all_in_one/update.command')
 		# subprocess.call([updater])
 		

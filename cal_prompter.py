@@ -3,7 +3,6 @@ Simple calendar using ttk Treeview together with calendar and datetime
 classes.
 """
 import calendar
-
 try:
     import Tkinter
     import tkFont
