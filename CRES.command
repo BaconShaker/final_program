@@ -77,7 +77,7 @@ def main():
 	database_main = Data_Manager()
 
 	route = Route_Manager(database_main)
-	collection_list = route.run_route() # LIST OF DICTS
+	collection_list = route.run_route() # LIST OF Collection instances
 
 	
 

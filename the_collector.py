@@ -3,6 +3,8 @@
 
 from tabulate import tabulate
 from datetime import *
+import os
+import sys
 
 print "Imported Collections"
 # Variables we need:
@@ -132,11 +134,7 @@ class Collection():
 
 	# Make anobject that outside programs can return and use
 	def run_checks(self):
-		
-			
-		# print '\n\n'  , self.indict ,  "\n\n"
-
-		print "Collection.run_checks()\n"
+		os.system('clear')
 		print "Checker:" ,
 		if self.indict["Expected Income"] > self.indict["Expected Revenue"]:
 			print "\n********** ********** ***********"

@@ -14,8 +14,11 @@ from gmapper import *
 from the_collector import *
 import urllib
 import urllib2
+import sys
 from bs4 import BeautifulSoup 
 from __init__ import __ICNC__
+from tabulate import tabulate
+import time
 
 
 try:
@@ -73,41 +76,6 @@ class Route_Manager(object):
 		self.link_diesel = 'http://www.eia.gov/dnav/pet/pet_pri_gnd_dcus_r20_w.htm'
 
 
-
-	def ams_lookup(self):
-		response = urllib2.urlopen(self.link_ams)
-		soup = BeautifulSoup(response)
-		# Ruh-roh the ams gives us a .txt file to parse
-		text = soup.get_text()
-		# Start at the index where Choice white appears, go to EDIBLE LARD 
-		self.yg_price_text = text[text.index('Choice white') :text.index('EDBLE LARD')]
-		# Do the same thing for the report location
-		ams_edit = text[text.index('Des') : text.index('2015') + 4 ].replace("     ", "\n Current as of ")
-		self.ams_location = ams_edit
-		print "yg price:", self.yg_price_text
-		print "ams_location", self.ams_location
-
-		self.yg_price = float(raw_input("\n What is the price of YG you want to use for this batch of Collections?	"))
-		self.yg_price = self.yg_price / 100
-
-	def	diesel_lookup(self):
-		print "\nStart of price_of_diesel()\n"
-		diesel= urllib2.urlopen(self.link_diesel)
-		dsoup = BeautifulSoup(diesel)
-		# links = soup.find_all( "Current2")
-		# print "This is the price of Fuel today according to: ", self.link_diesel
-		dsoup.prettify()
-		data = dsoup.find_all('td' , 'Current2')
-		length = len(data)
-		# print data[13]
-		temp = str(data[13])
-		price = temp[32:36]
-		diesel.close()
-		print "End of price_of_diesel()\n"
-		self.price_of_diesel = price
-		return price
-
-
 	def run_route(self):
 
 		self.ams_lookup()
@@ -134,17 +102,59 @@ class Route_Manager(object):
 			stop['Diesel Price'] = dprice
 
 
-			Collection(stop).run_checks()
+			collected = Collection(stop)
 
-			collections += [stop]
+			collections += [collected]
 		# collections = [Collection(stop) for stop in filtered]
 		# for c in collections:
 		# 	print c
 		return collections
 
 
-		
-		
+	def ams_lookup(self):
+		response = urllib2.urlopen(self.link_ams)
+		soup = BeautifulSoup(response)
+		# Ruh-roh the ams gives us a .txt file to parse
+		text = soup.get_text()
+		# Start at the index where Choice white appears, go to EDIBLE LARD 
+		self.yg_price_text = text[text.index('Choice white') :text.index('EDBLE LARD')]
+		# Do the same thing for the report location
+		ams_edit = text[text.index('Des') : text.index('2015') + 4 ].replace("     ", "\n Current as of ")
+		self.ams_location = ams_edit
+		os.system('clear')
+		print "From: ", self.ams_location
+		print "	", self.yg_price_text
+		print "\n What is the price of YG you want to use for this batch of Collections?	"
+		try:
+			yg_in = raw_input("Enter a number, a letter will quit. ")
+			self.yg_price = float(yg_in) / 100
+		except ValueError, e:
+			if yg_in == "":
+				print "\n*** YOU SET THE PRICE TO 23.0 ***\n"
+				self.yg_price = float(23.0) / 100
+			else: 
+				os.system('clear')
+				sys.exit("\nNice try, that wasn't a number. No changes have been made. ")
+				
+
+	def	diesel_lookup(self):
+		print "\nStart of price_of_diesel()\n"
+		diesel= urllib2.urlopen(self.link_diesel)
+		dsoup = BeautifulSoup(diesel)
+		# links = soup.find_all( "Current2")
+		# print "This is the price of Fuel today according to: ", self.link_diesel
+		dsoup.prettify()
+		data = dsoup.find_all('td' , 'Current2')
+		length = len(data)
+		# print data[13]
+		temp = str(data[13])
+		price = temp[32:36]
+		diesel.close()
+		print "End of price_of_diesel()\n"
+		self.price_of_diesel = price
+		return price
+
+
 
 	def get_route_from_gform(self, date_picker):
 		# Get Auth2 credentials
@@ -208,17 +218,33 @@ class Route_Manager(object):
 		return total_dist
 
 	def add_collections_to_db(self, collections):
-		for leg in collections:
+		# Iterates through the collections to add them one dict at a time. 
+		for stop in collections:
+			os.system('clear')
+			leg = stop.run_checks()
 			leg['Pickup Date'] = leg['Pickup Date'].split("/")
 			leg['Pickup Date'] = leg['Pickup Date'][2] + "-" + leg['Pickup Date'][0] + "-" + leg['Pickup Date'][1]
-
-
 			leg['Arrival'] = leg["Height on Arrival"]
 			leg['Departure'] = leg["Height on Departure"]
-			
-			self.data.add_dict_to_db("Pickups", leg)
 
-	
+			print " 	Summary for", leg['Location']
+			print tabulate( [( e, leg[e] ) for e in leg] , ["Key", "Value"])
+		
+		
+			print "\nIs everything ok?"
+			print "If you say yes, I will add this leg only. You will have a chance to inspect the other legs as well. "
+			are_you_sure = raw_input('\nProceed, y/n?	')
+			if are_you_sure == 'y':
+
+				self.data.add_dict_to_db("Pickups", leg)
+			else:
+				os.system('clear')
+				
+
+				print "\n\n 	****\n 	You elected not to add the", leg["Location"],  "leg of the collection."
+				print "	To add it, you have to re-run the program, just say no to the other legs.\n 	****"
+
+				time.sleep(3)
 
 
 

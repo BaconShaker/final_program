@@ -87,28 +87,17 @@ class Data_Manager():
 
 		os.system('clear')
 
-		print "\n\n This is the SQL query: ", sql
+		# print "\n\n This is the SQL query: ", sql
 
 		# As of 7/21 this part will add any collections in a list of collections
 		# to the database. I want to change that so it either doesn't add any unless the whole list 
 		# is ok, or make it so it checks for similar entries and updates rather than cancel out. 
+		#	There's more in route_handler.add_collections_to_db()
 		
-		print "\n Would you like to execute the above statement?"
-		ask = raw_input('y/n:')
-		while ask != 'y':
-			if ask =="n":
-				os.system('clear')
-				print "Nothing was added, gonna have to start over. "
-				break
-			else:
-				print "Did you mean to hit another button? Here, try again."
-				ask = raw_input('y/n:')
-
-		else: 
-			cursor.execute(sql)
-			db.commit()
-			os.system('clear')
-			print "\n\n\nJolly good mate! I added the collections to the database, you're all good to go! "
+		cursor.execute(sql)
+		db.commit()
+		
+		print "\n\n\nJolly good mate! I added the collections to the database, you're all good to go! "
 
 
 
