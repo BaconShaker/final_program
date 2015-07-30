@@ -32,7 +32,7 @@ def get_location_names():
 today = datetime.now()
 this_month = calendar.month_name[today.month]
 last_month = calendar.month_name[today.month - 1]
-
+# List of default things to list in list_by_location()
 
 
 class Data_Manager():
@@ -40,6 +40,22 @@ class Data_Manager():
 
 	def __init__(self):
 		print "You have created a Data_Manager instance in", __name__
+
+	def list_by_location(self, location):
+		# Make a summary sheet for location using information as detail specifier.
+		
+		smry = """SELECT MONTHNAME(`Pickup Date`) as "Month",
+		ROUND(SUM(`Collectable Material`), 0), 
+		ROUND(SUM(`Gallons Collected`), 0), 
+		ROUND(SUM(`Expected Donation`), 2) 
+			from Pickups where `Location` = "%s" 
+			group by Monthname(`Pickup Date`)
+			order by DATE(`Pickup Date`) DESC
+			""" % (location)
+		print smry
+		cursor.execute(smry)
+		return cursor.fetchall()
+
 
 
 
@@ -179,7 +195,6 @@ class Data_Manager():
 
 	def sum_donations_by_month(self, month = last_month):
 
-		# Return a dictionary of location : (monthly donation, charity)
 
 		# self.names()
 		doncursor = db.cursor()
@@ -204,7 +219,11 @@ class Data_Manager():
 
 		return grabber
 
+	def charity_checks_by_month(self, month = last_month):
+		# Return the sum of donations to each charity. 
 
+		looker = 'SELECT `Charity`, '
+		
 		
 		
 
@@ -225,7 +244,8 @@ if __name__ == '__main__':
 	# writer.list_names()
 	# r = writer.charity_lookup("Vinyl")
 	# print r
-	donations = writer.sum_donations_by_month("July")
-	
+	# donations = writer.sum_donations_by_month("July")
+	summary = writer.list_by_location("Bellweather")
+	print summary
 		
 		

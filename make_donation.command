@@ -17,9 +17,13 @@ def main():
 	master = Data_Manager()
 	donations = master.sum_donations_by_month(month) #returns {location (details tuple)}
 
-	email = Mailer(month, send = "no")
+
+	ask = raw_input("\n\nType 'yes' to send receipts. Anything else will be rejected. ")
+	email = Mailer(month, send = ask)
 	for donation in donations:
-		email.send_reciept(donation)
+		print "\n"
+		email.list_to_html( master.list_by_location(donation[0]) )
+		log_me( email.send_reciept(donation))
 
 
 
