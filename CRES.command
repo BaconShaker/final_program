@@ -77,6 +77,7 @@ def main():
 
 
 	database_main = Data_Manager()
+	
 
 	route = Route_Manager(database_main)
 	collection_list = route.run_route() # LIST OF Collection instances
@@ -84,8 +85,10 @@ def main():
 	
 
 	route.add_collections_to_db(collection_list)
+	database_main.average_donations()
+	database_main.set_last_pickup()
 
-
+	
 	# build() needs to return something in the form of:
 	# [ stop number, name, address, city, zip, contact email, phone number, 
 	# 	contact name, date, charity, average donation, notes ]

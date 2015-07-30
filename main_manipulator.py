@@ -8,6 +8,8 @@ import math
 from __init__ import __sql__
 
 from gmapper import *
+import calendar
+from tabulate import tabulate
 
 db = mysql.connector.connect(**__sql__)
 cursor = db.cursor()
@@ -26,6 +28,12 @@ def get_location_names():
 	# for name in namer:
 	# 	print "	",name
 	return namer
+
+today = datetime.now()
+this_month = calendar.month_name[today.month]
+last_month = calendar.month_name[today.month - 1]
+
+
 
 class Data_Manager():
 	location_names = get_location_names()
@@ -113,15 +121,88 @@ class Data_Manager():
 	# 	print "the route is ", self.route_length(routelist) , "miles long."
 
 		
+	def average_donations(self):
+		print "\n\nThis is average_donations()\n"
+		cursor = db.cursor()
+		ssql = "SELECT `Location`, AVG(`Expected Donation`) FROM Pickups GROUP BY `Location`"
+		cursor.execute(ssql)
+		result = cursor.fetchall()
+		result_dict = {str(key):round(val, 2) for key, val in result}
+
+		print result_dict
+
+		# Got the averages for each locations donations,
+		# now to UPDATE the column
+
+		for item in result_dict:
+			cmd = 'UPDATE `Locations` SET `Average Donation`= %6.2f WHERE `Name` = "%s" ' %( result_dict[item] , item)
+			print cmd
+			cursor.execute(cmd)
+			db.commit()
+
+		print "\nDonations averaged and sql UPDATED.\n"
 
 
 
 
+	def set_last_pickup(self, chk = 1):
+		print "\nlast_pickup()..."
+		print "Passing lastpickup(0) will result in no UPDATE; DEFAULT will UPDATE"
+		cursor = db.cursor()
+		launch = """SELECT 
+						`Location`,
+						MAX(`Pickup Date`) AS "Last Collection",
+						`Arrival`,
+						`Departure`,
+						`Quality`,
+						`Expected Income`,
+						`Expected Donation`
+					FROM Pickups 
+					GROUP BY `Location`"""
+
+		cursor.execute(launch)
+		recent_pickups = cursor.fetchall()
+		# for t in recent_pickups:
+		# 	print t
+		self.picker = recent_pickups
+
+		if chk == 1:
+			for pickup in recent_pickups:
+				print pickup
+				admin = """UPDATE Locations SET `Last Pickup`= '%s' WHERE `Name` = "%s" """ % ( pickup[1] , pickup[0] )
+				print admin, '\n'
+				cursor.execute(admin)
+				db.commit()
+		else:
+			return recent_pickups
 
 
+	def sum_donations_by_month(self, month = last_month):
+
+		# Return a dictionary of location : (monthly donation, charity)
+
+		# self.names()
+		doncursor = db.cursor()
+		print "\n\nThis is sum_donations_by_month(). "
+		print "Restaurants that are going to make donations in:", month, "\n"
+		
+		monthsql = "select `Location`, SUM(`Collectable Material`) , SUM(`Gallons Collected`),  SUM(`Expected Donation`), SUM(`Expected Income`) , `charity` from Pickups where MONTHNAME(`Pickup Date`) = '%s' group by `Location`" % (month)
+
+		doncursor.execute(monthsql)
+		grabber = doncursor.fetchall()
+		# print grabber
+		# monthly_donations = { key:(int(lbs), int(gallons), round(float(tot_donation),2) , charity) for key, lbs, gallons, tot_donation, cres_income, charity in  grabber }
+		# print "\n\nMonthly donations: " , monthly_donations
+		for rest in grabber:
+			print "	", rest[0] 
+		print ""	
+		# display_this = [[key, (int(lbs), int(gallons), round(float(tot_donation),2) , charity)] for key, lbs, gallons, tot_donation, charity in  grabber ]
+		print tabulate(grabber, headers = ["Location", "LBS", "Gallons", "Donation for " + month, "CRES Income",  "Charity"] )
+		
+		print "\nThe table should expand if you make the window larger. "
 
 
-
+		return grabber
 
 
 		
@@ -142,7 +223,9 @@ class Data_Manager():
 if __name__ == '__main__':
 	writer = Data_Manager()
 	# writer.list_names()
-	r = writer.charity_lookup("Vinyl")
-	print r
+	# r = writer.charity_lookup("Vinyl")
+	# print r
+	donations = writer.sum_donations_by_month("July")
+	
 		
 		
