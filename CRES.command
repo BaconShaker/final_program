@@ -28,7 +28,7 @@ while mods == 1:
 		import subprocess
 
 		# Check if the database is up and running. 
-		from sql_ops import *
+		from p_files.sql_ops import *
 		check_sql = CRES_SQL()
 		check_sql.is_running()
 
@@ -40,8 +40,8 @@ while mods == 1:
 		from datetime import date
 		import thread
 		# main_manipulator has Data_Manager()
-		from main_manipulator import *
-		from route_handler import *
+		from p_files.main_manipulator import *
+		from p_files.route_handler import *
 
 		mods = 0
 		
@@ -86,7 +86,8 @@ def main():
 
 	route.add_collections_to_db(collection_list)
 	database_main.average_donations()
-	database_main.set_last_pickup()
+	database_main.collection_analysis()
+	# database_main.fix_supporters()
 
 	
 	# build() needs to return something in the form of:

@@ -21,9 +21,13 @@ def main():
 	ask = raw_input("\n\nType 'yes' to send receipts. Anything else will be rejected. ")
 	email = Mailer(month, send = ask)
 	for donation in donations:
-		print "\n"
-		email.list_to_html( master.list_by_location(donation[0]) )
-		log_me( email.send_reciept(donation))
+		
+		contact = master.get_location_details( donation[0] )
+		contact_email = contact[3]
+		contact_person = contact[5]
+		
+		summary = master.list_by_location(donation[0])
+		log_me( email.send_reciept(donation, contact_email, contact_person, summary ) )
 
 
 
