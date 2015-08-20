@@ -52,7 +52,11 @@ class GoogleMap():
 		total_distance = 0
 		for count, gmap in enumerate(list_of_maps): 
 			# Iterate through the list
-			total_distance += round(   float(gmap[0]['legs'][0]['distance']['text'].replace( ' mi', ''))  ,  2 )
+			if gmap[0]['legs'][0]['distance']['text'][-2:] == "ft":
+				total_distance = 0.10
+			else:
+				
+				total_distance += round(   float(gmap[0]['legs'][0]['distance']['text'].replace( ' mi', ''))  ,  2 )
 			steps =  gmap[0]['legs'][0]['steps'] 
 			display = []
 			turn = 0

@@ -36,8 +36,6 @@ def charities_dict():
 	print '\nCharities list: '
 	for c in ch:
 		print "	", c, ":", ch[c]
-
-	
 	return ch
 
 today = datetime.now()
@@ -262,10 +260,16 @@ class Data_Manager():
 			
 			# print current
 			final = Set(new).difference(current)
+			length = len(final)
+			i = 1
 			done = ""
 			for x in final:
-				done += x + ", "
-	
+				if i < length:
+					done += x + ", "
+					i += 1
+				else:
+					done += x
+			print done
 			if len(final) != 0:
 				print "\n\nSupporters list has been updated successfully for:", charit
 				print "CURRENT: ", current

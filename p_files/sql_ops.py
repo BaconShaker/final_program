@@ -31,7 +31,7 @@ class CRES_SQL(object):
 				# sql_starter = os.path.expanduser('~/GoogleDrive/all_in_one/startSql.sh')
 				# subprocess.call( [sql_starter] )
 				# subprocess.call(['clear'])
-				time.sleep(3)
+				time.sleep(5)
 			except Exception, e:
 				print "*****************"
 				raise e
