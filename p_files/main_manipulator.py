@@ -11,9 +11,25 @@ from gmapper import *
 import calendar
 from tabulate import tabulate
 
+# Set today, this month and last month variables.
+today = datetime.now()
+this_month = calendar.month_name[today.month]
+last_month = calendar.month_name[today.month - 1]
+
+# Establish connection to SQL server.
 db = mysql.connector.connect(**__sql__)
 cursor = db.cursor()
 
+
+# Some generic functions
+def charities_dict():
+
+	cursor.execute("SELECT Name, Supporters from Charities")
+	ch = {x[0] : x[1].split(", ") for x in cursor.fetchall()}
+	print '\nCharities list: '
+	for c in ch:
+		print "	", c, ":", ch[c]
+	return ch
 
 def days_between(d1, d2):
     d1 = datetime.strptime(d1, "%Y-%m-%d")
@@ -29,70 +45,16 @@ def get_location_names():
 		print "	",name
 	return namer
 
-def charities_dict():
 
-	cursor.execute("SELECT Name, Supporters from Charities")
-	ch = {x[0] : x[1].split(", ") for x in cursor.fetchall()}
-	print '\nCharities list: '
-	for c in ch:
-		print "	", c, ":", ch[c]
-	return ch
-
-today = datetime.now()
-this_month = calendar.month_name[today.month]
-last_month = calendar.month_name[today.month - 1]
-# List of default things to list in list_by_location()
-
-
+# The main event!
 class Data_Manager():
 	location_names = get_location_names()
 	charities = charities_dict()
 
 	def __init__(self):
-		print "\n\nYou have created a Data_Manager instance in", __name__
+		print "\n\n have created a Data_Manager instance in", __name__
 
-	def list_by_location(self, location):
-		# Make a summary sheet for location using information as detail specifier.
-		
-		smry = """SELECT MONTHNAME(`Pickup Date`) as "Month",
-		ROUND(SUM(`Collectable Material`), 0), 
-		ROUND(SUM(`Gallons Collected`), 0), 
-		ROUND(SUM(`Expected Donation`), 2) 
-			from Pickups where `Location` = "%s" 
-			group by Monthname(`Pickup Date`)
-			order by DATE(`Pickup Date`) DESC
-			""" % (location)
-		# print smry
-		cursor.execute(smry)
-		return cursor.fetchall()
-
-
-
-
-	def average_collections_by_location(self):
-		# Resets the average collection col to include any new collecitons. 
-		print "\nThis is averageing the collections..."
-		average_sql = """SELECT `Location`, round(AVG(`Gallons Collected`) , 2) as "Average Collection" from Pickups group by `Location`"""
-		cursor.execute(average_sql)
-		collection_averages = cursor.fetchall()
-		for thing in collection_averages:
-			mean_sql = """UPDATE Locations SET `Average Collection`= %s WHERE `Name` = "%s" """ % (thing[1], thing[0])
-			cursor.execute(mean_sql)
-			db.commit()
-
-
-
-	def get_location_details(self, place_to_lookup):
-		# Grab the Address, city zip and email... for the route maker
-		squeeky = 'SELECT `Address`, `City`, `Zip`, `Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, `Total Donation`, `Notes`, `Name` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
-		cursor.execute(squeeky)
-		route_info = cursor.fetchall()
-		# print "Route info for", place_to_lookup, ": ", route_info[0], "\n"
-		return route_info[0]
-
-	def list_names(self):
-		print self.location_names
-
+	# Adds a dict or list of dicts to a table. 
 	def add_dict_to_db(self, tablename, rowdict):
 		# This function adds a dictionary row to the specified table 
 		# in the CRES database
@@ -132,21 +94,20 @@ class Data_Manager():
 		db.commit()
 		
 		print "\n\n\nJolly good mate! I added the collections to the database, you're all good to go! "
+	
+	# Updates CRES.Locations `Average Gallons` collected
+	def average_collections_by_location(self):
+		# Resets the average collection col to include any new collecitons. 
+		print "\nThis is averageing the collections..."
+		average_sql = """SELECT `Location`, round(AVG(`Gallons Collected`) , 2) as "Average Collection" from Pickups group by `Location`"""
+		cursor.execute(average_sql)
+		collection_averages = cursor.fetchall()
+		for thing in collection_averages:
+			mean_sql = """UPDATE Locations SET `Average Collection`= %s WHERE `Name` = "%s" """ % (thing[1], thing[0])
+			cursor.execute(mean_sql)
+			db.commit()
 
-
-
-	def charity_lookup(self, location):
-		query = 'SELECT `Charity` FROM Locations WHERE `Name` = "%s"' % (location)
-		cursor.execute(query)
-		charity_name = cursor.fetchall()
-		return str(charity_name[0][0])
-
-
-	# def build_route(self, routelist):
-	# 	print "This is build route"
-	# 	print "the route is ", self.route_length(routelist) , "miles long."
-
-		
+	# Updates CRES.Locations `Average Donations` 		
 	def average_donations(self):
 		print "\n\nThis is average_donations()\n"
 		cursor = db.cursor()
@@ -168,126 +129,26 @@ class Data_Manager():
 
 		print "\nDonations averaged and sql UPDATED.\n"
 
+	# Returns Charity string for Location	
+	def charity_lookup(self, location):
+		query = 'SELECT `Charity` FROM Locations WHERE `Name` = "%s"' % (location)
+		cursor.execute(query)
+		charity_name = cursor.fetchall()
+		return str(charity_name[0][0])
 
-
-
-	def set_last_pickup(self, chk = 1):
-		print "\nlast_pickup()..."
-		print "Passing lastpickup(0) will result in no UPDATE; DEFAULT will UPDATE"
-		cursor = db.cursor()
-		launch = """SELECT 
-						`Location`,
-						MAX(`Pickup Date`) AS "Last Collection"
-						# `Arrival`,
-						# `Departure`,
-						# `Quality`,
-						# `Expected Income`,
-						# `Expected Donation`
-					FROM Pickups 
-					GROUP BY `Location`"""
-
-		cursor.execute(launch)
-		recent_pickups = cursor.fetchall()
-		# for t in recent_pickups:
-		# 	print t
-		# self.picker = recent_pickups
-
-		if chk == 1:
-			print "	*****************	*****************	*****************"
-			print "You are about to write changes to the database."
-			print "	*****************	*****************	*****************"
-			for pickup in recent_pickups:
-				# print pickup
-				admin = """UPDATE Locations SET `Last Pickup`= '%s' WHERE `Name` = "%s" """ % ( pickup[1] , pickup[0] )
-				# print admin, '\n'
-				cursor.execute(admin)
-				db.commit()
-		else:
-			print "\n 	You did not write set_last_pickup to the database."
-			return recent_pickups
-
-
-	def sum_donations_by_month(self, month = last_month):
-
-		# self.names()
-		doncursor = db.cursor()
-		print "\n\nThis is sum_donations_by_month(). "
-		print "Restaurants that are going to make donations in:", month, "\n"
-		
-		monthsql = "select `Location`, SUM(`Collectable Material`) , SUM(`Gallons Collected`),  SUM(`Expected Donation`), SUM(`Expected Income`) , `charity` from Pickups where MONTHNAME(`Pickup Date`) = '%s' group by `Location`" % (month)
-
-		doncursor.execute(monthsql)
-		grabber = doncursor.fetchall()
-		# print grabber
-		# monthly_donations = { key:(int(lbs), int(gallons), round(float(tot_donation),2) , charity) for key, lbs, gallons, tot_donation, cres_income, charity in  grabber }
-		# print "\n\nMonthly donations: " , monthly_donations
-		for rest in grabber:
-			print "	", rest[0] 
-		print ""	
-		# display_this = [[key, (int(lbs), int(gallons), round(float(tot_donation),2) , charity)] for key, lbs, gallons, tot_donation, charity in  grabber ]
-		print tabulate(grabber, headers = ["Location", "LBS", "Gallons", "Donation for " + month, "CRES Income",  "Charity"] )
-		
-		print "\nThe table should expand if you make the window larger. "
-
-
-		return grabber
-
+	# 	*** NOT DONE ***
+	# 	Return the value for each Charity check for the previous month.
 	def charity_checks_by_month(self, month = last_month):
 		# Return the sum of donations to each charity. 
 
 		looker = 'SELECT `Location`  , Charity, COUNT(Location) AS "Collections" , ROUND( SUM(`Expected Donation`),2) AS "Aggregate Donation" from `Pickups` WHERE Charity in (SELECT Name from Charities ) GROUP BY Location'
 
-	
-
-
-	def fix_supporters(self):
-		from sets import Set
-		made_changes = 0
-
-		# Need a list of Charities
-
-		charities = self.charities
-
-		# Then for each name on the list get a list of charity names
-		for charit in charities:
-			
-			# Check if an update is needed... This is what we have 'now'
-			current = charities[charit]
-			
-			# This is what we 'want'
-			cursor.execute('SELECT Name from Locations where Charity = "%s"' % (charit))
-			new = [x[0] for x in cursor.fetchall()]
-			
-			# print current
-			final = Set(new).difference(current)
-			length = len(final)
-			i = 1
-			done = ""
-			for x in final:
-				if i < length:
-					done += x + ", "
-					i += 1
-				else:
-					done += x
-			print done
-			if len(final) != 0:
-				print "\n\nSupporters list has been updated successfully for:", charit
-				print "CURRENT: ", current
-				print "NEW:", new
-				print "Final:", final, len(final)
-				# for new_sup in final:
-				cursor.execute('UPDATE Charities SET Supporters = "%s" WHERE Name = "%s"' % (done, charit))
-				db.commit()
-				made_changes = 1
-
-		if made_changes != 1:
-			print "\n*****************"
-			print "It's not me, it's you. You didn't add/make any changes to Charity Supporters, so let us move on."
-			print "*****************"
-			
-	
-		
-	def collection_analysis(self):
+	# Calculates `Next Pickup1 date:
+	#	1. By averaging the day between ACTUAL collctions and
+	#	2. Calculates average gallons/day and plots a date
+	#
+	#	Does NOT return anything
+	def collection_analysis(self): # Needs comments!
 		# Finds the average number of days between pickups 
 		print "\n\nThis is collection_analysis()"
 		cursor = db.cursor()
@@ -378,7 +239,6 @@ class Data_Manager():
 			# print "nextpick: " , nextpick
 			# print "nextpick_gal: " , nextpick_gal
 
-
 			next = """UPDATE Locations SET `Next Pickup` = "%s", `Next Pickup Gallons` = "%s" where `Name` = "%s" """ % (nextpick[key], nextpick_gal[key] ,key )
 			# print next
 			cursor.execute(next)
@@ -389,17 +249,150 @@ class Data_Manager():
 			print "We go to", r , "every", day_dict[r], "but it should take ~", gal_dict[r] ,"days to fill.\n"
 		# return day_dict
 
+	# Makes a list of Supporters for CRES.Charities for each Location. 
+	# Only writes to db if there are changes to be made. 
+	# Does NOT return anything, at most it will db.commit().
+	def fix_supporters(self):
+		print "Updating supporters?"
+		from sets import Set
+		made_changes = 0
+
+		# Need a list of Charities
+
+		charities = self.charities
+
+		# Then for each name on the list get a list of charity names
+		for charit in charities:
+			
+			# Check if an update is needed... This is what we have 'now'
+			current = charities[charit]
+			
+			# This is what we 'want'
+			cursor.execute('SELECT Name from Locations where Charity = "%s"' % (charit))
+			new = [x[0] for x in cursor.fetchall()]
+			
+			# print current
+			final = Set(new).difference(current)
+			length = len(final)
+			i = 1
+			done = ""
+			for x in final:
+				if i < length:
+					done += x + ", "
+					i += 1
+				else:
+					done += x
+			print done
+			if len(final) != 0:
+				print "	Yes\n\n 	Supporters list has been updated successfully for:", charit
+				print "		CURRENT: ", current
+				print "		NEW:", new
+				print "		Final:", final, len(final)
+				# for new_sup in final:
+				cursor.execute('UPDATE Charities SET Supporters = "%s" WHERE Name = "%s"' % (done, charit))
+				db.commit()
+				made_changes = 1
+
+		if made_changes != 1:
+			print "\n*****************"
+			print "It's not me, it's you. You didn't add/make any changes to Charity Supporters, so let us move on."
+			print "*****************"
+		else:
+			print "Mischief Managed... Supporters are all up to date."
+
+	# Establish route_info and return.
+	def get_location_details(self, place_to_lookup):
+		# Grab the Address, city zip and email... for the route maker
+		squeeky = 'SELECT `Address`, `City`, `Zip`, `Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, `Total Donation`, `Notes`, `Name` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
+		cursor.execute(squeeky)
+		route_info = cursor.fetchall()
+		# print "Route info for", place_to_lookup, ": ", route_info[0], "\n"
+		return route_info[0]
+
+	# Returns a month summary for location provided
+	def list_by_location(self, location):
+		# Make a summary sheet for location using information as detail specifier.
+		
+		smry = """SELECT MONTHNAME(`Pickup Date`) as "Month",
+		ROUND(SUM(`Collectable Material`), 0), 
+		ROUND(SUM(`Gallons Collected`), 0), 
+		ROUND(SUM(`Expected Donation`), 2) 
+			from Pickups where `Location` = "%s" 
+			group by Monthname(`Pickup Date`)
+			order by DATE(`Pickup Date`) DESC
+			""" % (location)
+		# print smry
+		cursor.execute(smry)
+		return cursor.fetchall()
+
+	# Looks for most recent pickup and UPDATES CRES.Locations
+	def set_last_pickup(self, chk = 1):
+		print "\nlast_pickup()..."
+		print "Passing lastpickup(0) will result in no UPDATE; DEFAULT will UPDATE"
+		cursor = db.cursor()
+		launch = """SELECT 
+						`Location`,
+						MAX(`Pickup Date`) AS "Last Collection"
+						# `Arrival`,
+						# `Departure`,
+						# `Quality`,
+						# `Expected Income`,
+						# `Expected Donation`
+					FROM Pickups 
+					GROUP BY `Location`"""
+
+		cursor.execute(launch)
+		recent_pickups = cursor.fetchall()
+		# for t in recent_pickups:
+		# 	print t
+		# self.picker = recent_pickups
+
+		if chk == 1:
+			print "	*****************	*****************	*****************"
+			print "You are about to write changes to the database."
+			print "	*****************	*****************	*****************"
+			for pickup in recent_pickups:
+				# print pickup
+				admin = """UPDATE Locations SET `Last Pickup`= '%s' WHERE `Name` = "%s" """ % ( pickup[1] , pickup[0] )
+				# print admin, '\n'
+				cursor.execute(admin)
+				db.commit()
+		else:
+			print "\n 	You did not write set_last_pickup to the database."
+			return recent_pickups
+
+	# I think this is the same as list_by_location
+	# But I don't want to break anything so I'm going to leave it for later
+	def sum_donations_by_month(self, month = last_month):
+
+		# self.names()
+		doncursor = db.cursor()
+		print "\n\nThis is sum_donations_by_month(). "
+		print "Restaurants that are going to make donations in:", month, "\n"
+		
+		monthsql = "select `Location`, SUM(`Collectable Material`) , SUM(`Gallons Collected`),  SUM(`Expected Donation`), SUM(`Expected Income`) , `charity` from Pickups where MONTHNAME(`Pickup Date`) = '%s' group by `Location`" % (month)
+
+		doncursor.execute(monthsql)
+		grabber = doncursor.fetchall()
+		# print grabber
+		# monthly_donations = { key:(int(lbs), int(gallons), round(float(tot_donation),2) , charity) for key, lbs, gallons, tot_donation, cres_income, charity in  grabber }
+		# print "\n\nMonthly donations: " , monthly_donations
+		for rest in grabber:
+			print "	", rest[0] 
+		print ""	
+		# display_this = [[key, (int(lbs), int(gallons), round(float(tot_donation),2) , charity)] for key, lbs, gallons, tot_donation, charity in  grabber ]
+		print tabulate(grabber, headers = ["Location", "LBS", "Gallons", "Donation for " + month, "CRES Income",  "Charity"] )
+		
+		print "\nThe table should expand if you make the window larger. "
 
 
+		return grabber
 
 
+	
 
-
-
-
-
-
-
+			
+	
 
 if __name__ == '__main__':
 	writer = Data_Manager()
