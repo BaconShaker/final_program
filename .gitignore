@@ -1,9 +1,11 @@
 *.pyc
 __init__.py
 *.gsheet
+donation*
 *gform
 *.json
 stopSql.sh
 startSql.sh
 update.command
 MAMP_db
+*.html
