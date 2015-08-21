@@ -3,8 +3,8 @@
 # This is the main Script for making donations. 
 
 
-from main_manipulator import *
-from e_mailer import *
+from p_files.main_manipulator import *
+from p_files.e_mailer import *
 
 
 def main():
@@ -21,13 +21,16 @@ def main():
 	ask = raw_input("\n\nType 'yes' to send receipts. Anything else will be rejected. ")
 	email = Mailer(month, send = ask)
 	for donation in donations:
-		
-		contact = master.get_location_details( donation[0] )
-		contact_email = contact[3]
-		contact_person = contact[5]
-		
-		summary = master.list_by_location(donation[0])
-		log_me( email.send_reciept(donation, contact_email, contact_person, summary ) )
+		loc_name = donation[0]
+		print "Location:", loc_name
+
+
+		contact = master.get_location_details( loc_name )
+		summary = master.list_by_location(loc_name)
+		num_charities = len(master.charities)
+		agg_donation = master.aggregate_donations()
+
+		log_me( email.send_reciept(donation, contact,  summary , num_charities, agg_donation) )
 
 
 

@@ -94,16 +94,35 @@ class Data_Manager():
 		db.commit()
 		
 		print "\n\n\nJolly good mate! I added the collections to the database, you're all good to go! "
-	
+
+	# Return the sum of all donations made since the Dawn of CRES
+	def aggregate_donations(self):
+		cursor.execute(
+			"""	SELECT
+					ROUND(SUM(`Expected Donation`))
+					From Pickups
+					Where 1
+			""")
+		ag_don = cursor.fetchall()
+		return ag_don[0][0]
+
 	# Updates CRES.Locations `Average Gallons` collected
 	def average_collections_by_location(self):
 		# Resets the average collection col to include any new collecitons. 
 		print "\nThis is averageing the collections..."
-		average_sql = """SELECT `Location`, round(AVG(`Gallons Collected`) , 2) as "Average Collection" from Pickups group by `Location`"""
+		average_sql = """SELECT 
+							`Location`, 
+							round(AVG(`Gallons Collected`) , 2),
+							round(SUM(`Gallons Collected`))
+							from Pickups 
+							group by `Location`"""
 		cursor.execute(average_sql)
 		collection_averages = cursor.fetchall()
 		for thing in collection_averages:
-			mean_sql = """UPDATE Locations SET `Average Collection`= %s WHERE `Name` = "%s" """ % (thing[1], thing[0])
+			mean_sql = """UPDATE Locations 
+							SET `Average Collection`= %s , 
+								`Total Gallons` = %s 
+							WHERE `Name` = "%s" """ % (thing[1], thing[2], thing[0])
 			cursor.execute(mean_sql)
 			db.commit()
 
@@ -141,7 +160,23 @@ class Data_Manager():
 	def charity_checks_by_month(self, month = last_month):
 		# Return the sum of donations to each charity. 
 
-		looker = 'SELECT `Location`  , Charity, COUNT(Location) AS "Collections" , ROUND( SUM(`Expected Donation`),2) AS "Aggregate Donation" from `Pickups` WHERE Charity in (SELECT Name from Charities ) GROUP BY Location'
+		looker = """SELECT  
+			Charity, 
+			COUNT(Location) AS "Collections",
+			ROUND( SUM(`Expected Donation`),2) AS "Aggregate Donation"
+		from `Pickups` 
+		WHERE Charity in 
+			(SELECT Name from Charities)
+			AND
+				MONTHNAME(`Pickup Date`) = "%s" 
+		GROUP BY Charity""" % (month)
+		cursor.execute(looker)
+		to_return = cursor.fetchall()
+
+		# Print out a pretty table for funzies.
+		print tabulate(to_return, headers = ["Charity", "# Collections", "Donation for " + month])
+		return to_return
+
 
 	# Calculates `Next Pickup1 date:
 	#	1. By averaging the day between ACTUAL collctions and
@@ -303,18 +338,19 @@ class Data_Manager():
 	# Establish route_info and return.
 	def get_location_details(self, place_to_lookup):
 		# Grab the Address, city zip and email... for the route maker
-		squeeky = 'SELECT `Address`, `City`, `Zip`, `Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, `Total Donation`, `Notes`, `Name` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
+		print place_to_lookup
+		squeeky = 'SELECT `Address`, `City`, `Zip`,`Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, `Total Donation`, `Notes`, `Name`, `Total Gallons` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
 		cursor.execute(squeeky)
 		route_info = cursor.fetchall()
 		# print "Route info for", place_to_lookup, ": ", route_info[0], "\n"
 		return route_info[0]
 
-	# Returns a month summary for location provided
+	# Returns a monthly summary for location provided
 	def list_by_location(self, location):
 		# Make a summary sheet for location using information as detail specifier.
-		
+		# ROUND(SUM(`Collectable Material`), 0), 
 		smry = """SELECT MONTHNAME(`Pickup Date`) as "Month",
-		ROUND(SUM(`Collectable Material`), 0), 
+		
 		ROUND(SUM(`Gallons Collected`), 0), 
 		ROUND(SUM(`Expected Donation`), 2) 
 			from Pickups where `Location` = "%s" 
@@ -324,6 +360,16 @@ class Data_Manager():
 		# print smry
 		cursor.execute(smry)
 		return cursor.fetchall()
+
+	# Return a list of pickups for month given
+	def pickups_by_month(self, month = last_month):
+		cursor.execute(
+			"""	SELECT Location, `Gallons Collected` 
+				from Pickups 
+				where MONTHNAME(`Pickup Date`) = '%s'
+				""" % (month)
+			)
+		print cursor.fetchall()		
 
 	# Looks for most recent pickup and UPDATES CRES.Locations
 	def set_last_pickup(self, chk = 1):
@@ -361,8 +407,8 @@ class Data_Manager():
 			print "\n 	You did not write set_last_pickup to the database."
 			return recent_pickups
 
-	# I think this is the same as list_by_location
-	# But I don't want to break anything so I'm going to leave it for later
+	
+	# Returns a list of all the donations/collections made in month
 	def sum_donations_by_month(self, month = last_month):
 
 		# self.names()
@@ -399,10 +445,19 @@ if __name__ == '__main__':
 	# writer.list_names()
 	# print writer.charity_lookup("Kappy's Diner & Pancake House")
 	# print r
-	# donations = writer.sum_donations_by_month("July")
+	# donations = writer.sum_donations_by_month("August")
 	# summary = writer.list_by_location("Bellweather")
-	writer.fix_supporters()
+	# writer.fix_supporters()
 	# print writer.set_last_pickup()
 
 	# print writer.collection_analysis()
-		
+	# print "This is donations"
+	# print "	", donations
+
+	# writer.pickups_by_month("August")
+	# print "\n\nThis is summary"
+	# print "	", summary
+	writer.aggregate_donations()
+
+
+	# print writer. charity_checks_by_month()

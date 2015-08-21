@@ -8,13 +8,14 @@ from email.MIMEText import MIMEText
 from email.MIMEImage import MIMEImage
 import subprocess
 from tabulate import tabulate
-
+from datetime import *
 import time
 import os
 
 def log_me(inme):
+	loggs = inme[inme.index("<!doctype html>") : inme.index( "</html>" ) + 7 ]
 	opener = open(os.path.expanduser('~/GoogleDrive/all_in_one/log.txt'), 'a')
-	opener.write(str(inme))
+	opener.write(str(loggs))
 	opener.close()
 
 
@@ -44,7 +45,14 @@ class Mailer():
 
 
 
-	def send_reciept(self, donation, contact_email, contact_name, summary_q):
+	def send_reciept(self, donation, contact,  summary_q, num_charities, agg_donation):
+		# Need to get some things straightened out first here
+		total_donations = contact[8]
+		contact_email = contact[3]
+		contact_name = contact[5]
+		total_gallons = contact[11]
+
+
 		# print "You need to run list_to_html first!"
 		print "This is the receipt build for %s." % ( donation[0] )
 		lbs = str(int(donation[1]))
@@ -58,11 +66,21 @@ class Mailer():
 		print "\nLooking for:", monthly_file_path
 		htmly = open(monthly_file_path, 'r')
 		html = str(htmly.read()) 
-
+		print "\n"
+		for i in donation:
+			print i
+		html = html.replace("GAL_THIS_MTH", gals)
+		
+		html = html.replace("DON_THIS_MTH", don)
+		html = html.replace("THEIR_CHARITY", str(donation[5]))
+		html = html.replace("MONTH", self.month)
+		html = html.replace("TOT_DON", str(total_donations))
+		html = html.replace("NUM_CHARITIES", str(num_charities) )
+		html = html.replace("AGGREGATE_DONATION", str(agg_donation ))
 		html = html.replace("<!--SUMMARYROWS-->", self.list_to_html(summary_q))
 		
-		html = html.replace("MONTH" , self.month)
-		html = html.replace("LLLBBBSSS" , lbs)
+		html = html.replace("THIS_YEAR" , str(datetime.now().year))
+		html = html.replace("TOT_GAL" , str(total_gallons))
 		html = html.replace("GGGAAALLL" , gals)
 		html = html.replace("DDDOOONNN" , don)
 		html = html.replace("CCHHHAAARRIITTTY" , str(donation[5]))
@@ -108,7 +126,6 @@ class Mailer():
 		msgRoot.attach(msgImage)
 
 		# Send the email (this example assumes SMTP authentication is required)
-		
 		smtp = smtplib.SMTP()
 		smtp.connect('smtp.gmail.com:587')
 		smtp.starttls()
@@ -122,8 +139,6 @@ class Mailer():
 			os.system('clear')
 			# print "\n\nYou did NOT send any emails."
 			
-			
-		
 		smtp.quit()
 		# print "\n\nHere is the email that was just sent:"
 		# print msgRoot.as_string()[0:1000]
@@ -138,13 +153,13 @@ class Mailer():
 		print "\nSummary: "
 		print summary_display
 		
-		return for_display
+		return msgRoot.as_string()
+		# return for_display
 
 if __name__ == '__main__':
 	print "Hold on tight!" 
 
-	mailer = Mailer()
+	mailer = Mailer("August")
 	
-		
 
 	
