@@ -36,6 +36,16 @@ def days_between(d1, d2):
     d2 = datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
 
+def estimate_sale_date(gals, days, target = 6000):
+	gpd = gals / days
+	to_go = target - gals
+	days_till = int(to_go / gpd)
+	today = datetime.today().date() 
+	estimated_sale_date = today + timedelta(days = days_till)
+	return estimated_sale_date
+
+	
+
 def get_location_names():
 	# This little bugger makes the master names lists for other scripts
 	cursor.execute("SELECT `Name` FROM `Locations`")
@@ -284,6 +294,47 @@ class Data_Manager():
 			print "We go to", r , "every", day_dict[r], "but it should take ~", gal_dict[r] ,"days to fill.\n"
 		# return day_dict
 
+	# Figure sale date and update analysis table
+	def figure_next_sale(self):
+		needed = 6000 
+		cursor.execute(
+			"""SELECT
+					round(sum(`Gallons Collected`)) as "Actual Collected Gallons",
+					round(sum(`Gallons Collected`) * avg(Quality)/100)  as "Gallons x Quality",
+					datediff( max(`Pickup Date`), min(`Pickup Date`)) as "Days" 
+				from 
+					Pickups
+							""")
+
+		stats = cursor.fetchall()[0]
+		stats = {
+			'current' : stats[0],
+			"quality" : stats[1],
+			"day_count" : stats[2]
+			}
+		
+		actual = estimate_sale_date(stats['current'], stats['day_count'])
+		with_quality = estimate_sale_date(stats['quality'], stats['day_count'])
+		# print "Date by actual gallons:", actual
+		# print "Date by quality gallns:", with_quality
+
+		cursor.execute(
+			"""UPDATE 
+				Analysis
+				set 
+					On_hand = %s,
+					Quality = %s,
+					`Next_sale(Q)` = '%s',
+					`Next_sale(A)` = '%s'
+				where 
+					1
+					
+				""" % (stats['current'], stats['quality'], with_quality, actual)
+			)
+		db.commit()
+		return stats
+
+
 	# Makes a list of Supporters for CRES.Charities for each Location. 
 	# Only writes to db if there are changes to be made. 
 	# Does NOT return anything, at most it will db.commit().
@@ -457,7 +508,8 @@ if __name__ == '__main__':
 	# writer.pickups_by_month("August")
 	# print "\n\nThis is summary"
 	# print "	", summary
-	writer.aggregate_donations()
+	# writer.aggregate_donations()
+	writer.figure_next_sale()
 
 
 	# print writer. charity_checks_by_month()
