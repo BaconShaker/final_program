@@ -12,9 +12,9 @@ from datetime import *
 import time
 import os
 
-def log_me(inme):
+def log_me(inme, locn):
 	loggs = inme[inme.index("<!doctype html>") : inme.index( "</html>" ) + 7 ]
-	opener = open(os.path.expanduser('~/GoogleDrive/all_in_one/log.txt'), 'a')
+	opener = open(os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s.html') % locn, 'wb')
 	opener.write(str(loggs))
 	opener.close()
 
@@ -38,7 +38,12 @@ class Mailer():
 			for num in detail[1:]:
 				summary_html +=  '<td style="text-align: center">' + str(int(num)) +'</td>'
 				
-			summary_html += '</tr>'
+		summary_html += """<tr><th scope="row">Totals</th>
+								<td style="text-align": center>TOT_GAL</td>
+								<td style="text-align": center>TOT_DON</td>
+								</tr> """
+			
+			
 
 		return summary_html
 
@@ -47,10 +52,15 @@ class Mailer():
 
 	def send_reciept(self, donation, contact,  summary_q, num_charities, agg_donation):
 		# Need to get some things straightened out first here
-		total_donations = contact[8]
+		if type(contact[8]) != None :
+			total_donations = contact[8]
+		else:
+			total_donations = 0
 		contact_email = contact[3]
 		contact_name = contact[5]
+		contact_name = contact_name[:contact_name.index(" ")]
 		total_gallons = contact[11]
+		locname = contact[10]
 
 
 		# print "You need to run list_to_html first!"
@@ -59,25 +69,34 @@ class Mailer():
 		gals = str(int(donation[2]))
 		don = str(round(donation[3] , 2 ))
 		
-		finder = "find ~/G* -iname %s.html" % (self.month)
+		#~ finder = "find ~/G* -iname %s.html" % (self.month)
+		finder = "find ~/G* -iname template.html"
 		
 		monthly_file_path = subprocess.check_output([finder], shell = True)
 		monthly_file_path = monthly_file_path[:-1]
 		print "\nLooking for:", monthly_file_path
+		
+		# Gotta do some work on the HTML string
 		htmly = open(monthly_file_path, 'r')
 		html = str(htmly.read()) 
 		print "\n"
 		for i in donation:
 			print i
+		html = html.replace("CONTACT_NAME", contact_name)
 		html = html.replace("GAL_THIS_MTH", gals)
+		html = html.replace("LOCATION_NAME", locname)
 		
 		html = html.replace("DON_THIS_MTH", don)
 		html = html.replace("THEIR_CHARITY", str(donation[5]))
 		html = html.replace("MONTH", self.month)
-		html = html.replace("TOT_DON", str(total_donations))
+		
 		html = html.replace("NUM_CHARITIES", str(num_charities) )
 		html = html.replace("AGGREGATE_DONATION", str(agg_donation ))
 		html = html.replace("<!--SUMMARYROWS-->", self.list_to_html(summary_q))
+		
+		# TOT_DON and TOT_GAL need to go after summary is called because 
+		# some of the string to be replaced here gets inserted. 
+		html = html.replace("TOT_DON", str(int(total_donations)))
 		
 		html = html.replace("THIS_YEAR" , str(datetime.now().year))
 		html = html.replace("TOT_GAL" , str(total_gallons))
@@ -116,10 +135,10 @@ class Mailer():
 
 		# This example assumes the image is in the current directory
 		logo_path = "find ~/G* -iname receipt_logo.jpg"
-		logo_path = subprocess.check_output([logo_path], shell = True)[:-1]
+		logo_path = subprocess.check_output( [logo_path] , shell = True)[:-1]
 		fp = open(logo_path, 'rb')
 		msgImage = MIMEImage(fp.read())
-		fp.close()
+		
 
 		# Define the image's ID as referenced in the html file
 		msgImage.add_header('Content-ID', '<image1>')
@@ -152,6 +171,11 @@ class Mailer():
 		print this_month_display
 		print "\nSummary: "
 		print summary_display
+		
+		# Make sure to close the logo file. 
+		fp.close()
+		if self.send != 'yes':
+			print "\n\nYou did NOT send any emails."
 		
 		return msgRoot.as_string()
 		# return for_display

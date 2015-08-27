@@ -390,7 +390,7 @@ class Data_Manager():
 	def get_location_details(self, place_to_lookup):
 		# Grab the Address, city zip and email... for the route maker
 		print place_to_lookup
-		squeeky = 'SELECT `Address`, `City`, `Zip`,`Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, `Total Donation`, `Notes`, `Name`, `Total Gallons` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
+		squeeky = 'SELECT `Address`, `City`, `Zip`,`Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, ROUND(`Total Donation`), `Notes`, `Name`, `Total Gallons` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
 		cursor.execute(squeeky)
 		route_info = cursor.fetchall()
 		# print "Route info for", place_to_lookup, ": ", route_info[0], "\n"
@@ -400,14 +400,17 @@ class Data_Manager():
 	def list_by_location(self, location):
 		# Make a summary sheet for location using information as detail specifier.
 		# ROUND(SUM(`Collectable Material`), 0), 
-		smry = """SELECT MONTHNAME(`Pickup Date`) as "Month",
+		smry = """SELECT 
+					MONTHNAME(`Pickup Date`) as "Month",
 		
-		ROUND(SUM(`Gallons Collected`), 0), 
-		ROUND(SUM(`Expected Donation`), 2) 
-			from Pickups where `Location` = "%s" 
-			group by Monthname(`Pickup Date`)
-			order by DATE(`Pickup Date`) DESC
-			""" % (location)
+					ROUND(SUM(`Gallons Collected`), 0), 
+					ROUND(SUM(`Expected Donation`), 2)
+					
+				from Pickups 
+				where `Location` = "%s" 
+				group by Monthname(`Pickup Date`)
+				order by DATE(`Pickup Date`) DESC
+				""" % (location)
 		# print smry
 		cursor.execute(smry)
 		return cursor.fetchall()
@@ -429,12 +432,9 @@ class Data_Manager():
 		cursor = db.cursor()
 		launch = """SELECT 
 						`Location`,
-						MAX(`Pickup Date`) AS "Last Collection"
-						# `Arrival`,
-						# `Departure`,
-						# `Quality`,
-						# `Expected Income`,
-						# `Expected Donation`
+						MAX(`Pickup Date`) AS "Last Collection",
+						SUM(`Expected Donation`),
+						SUM(`Gallons Collected`)
 					FROM Pickups 
 					GROUP BY `Location`"""
 
@@ -450,7 +450,14 @@ class Data_Manager():
 			print "	*****************	*****************	*****************"
 			for pickup in recent_pickups:
 				# print pickup
-				admin = """UPDATE Locations SET `Last Pickup`= '%s' WHERE `Name` = "%s" """ % ( pickup[1] , pickup[0] )
+				admin = """UPDATE 
+							Locations 
+						SET 
+							`Last Pickup`= '%s', 
+							`Total Donation` = %s, 
+							`Total Gallons` = %s 
+						WHERE `Name` = "%s" 
+						""" % ( pickup[1] , pickup[2], pickup[3], pickup[0] )
 				# print admin, '\n'
 				cursor.execute(admin)
 				db.commit()
@@ -513,7 +520,7 @@ if __name__ == '__main__':
 	# donations = writer.sum_donations_by_month("August")
 	# summary = writer.list_by_location("Bellweather")
 	# writer.fix_supporters()
-	# print writer.set_last_pickup()
+	print writer.set_last_pickup()
 
 	# print writer.collection_analysis()
 	# print "This is donations"
@@ -523,7 +530,7 @@ if __name__ == '__main__':
 	# print "\n\nThis is summary"
 	# print "	", summary
 	# writer.aggregate_donations()
-	writer.figure_next_sale()
+	#~ writer.figure_next_sale()
 
 
 	# print writer. charity_checks_by_month()

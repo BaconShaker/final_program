@@ -30,7 +30,7 @@ def main():
 		num_charities = len(master.charities)
 		agg_donation = master.aggregate_donations()
 
-		log_me( email.send_reciept(donation, contact,  summary , num_charities, agg_donation) )
+		log_me( email.send_reciept(donation, contact,  summary , num_charities, agg_donation), contact[10] )
 
 
 
