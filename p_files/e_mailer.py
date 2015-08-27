@@ -12,9 +12,13 @@ from datetime import *
 import time
 import os
 
-def log_me(inme, locn):
+def log_me(inme, locn, month):
 	loggs = inme[inme.index("<!doctype html>") : inme.index( "</html>" ) + 7 ]
-	opener = open(os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s.html') % locn, 'wb')
+	log_path = os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s/' % locn )
+	if not os.path.exists(log_path):
+		os.makedirs(log_path)
+	log_file = os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s/%s.html') % (locn, month)
+	opener = open(log_file, 'wb')
 	opener.write(str(loggs))
 	opener.close()
 
@@ -42,13 +46,9 @@ class Mailer():
 								<td style="text-align": center>TOT_GAL</td>
 								<td style="text-align": center>TOT_DON</td>
 								</tr> """
-			
-			
 
 		return summary_html
-
-
-
+		
 
 	def send_reciept(self, donation, contact,  summary_q, num_charities, agg_donation):
 		# Need to get some things straightened out first here
