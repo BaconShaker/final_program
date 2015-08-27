@@ -467,7 +467,21 @@ class Data_Manager():
 		print "\n\nThis is sum_donations_by_month(). "
 		print "Restaurants that are going to make donations in:", month, "\n"
 		
-		monthsql = "select `Location`, SUM(`Collectable Material`) , SUM(`Gallons Collected`),  SUM(`Expected Donation`), SUM(`Expected Income`) , `charity` from Pickups where MONTHNAME(`Pickup Date`) = '%s' group by `Location`" % (month)
+		monthsql = """select 
+						`Location`, 
+						SUM(`Collectable Material`) , 
+						SUM(`Gallons Collected`),  
+						SUM(`Expected Donation`), 
+						SUM(`Expected Income`) , 
+						`charity` 
+						from 
+							Pickups 
+						where 
+							MONTHNAME(`Pickup Date`) = '%s' 
+						group by 
+							`Location`
+						
+						""" % (month)
 
 		doncursor.execute(monthsql)
 		grabber = doncursor.fetchall()
