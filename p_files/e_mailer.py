@@ -6,18 +6,18 @@ import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from email.MIMEImage import MIMEImage
-import subprocess
+
 from tabulate import tabulate
 from datetime import *
-import time
-import os
 
-def log_me(inme, locn, month):
+import os, sys, time, subprocess
+
+def log_me(inme, locn, month, year = 2015):
 	loggs = inme[inme.index("<!doctype html>") : inme.index( "</html>" ) + 7 ]
-	log_path = os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s/' % locn )
+	log_path = os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s' % locn )
 	if not os.path.exists(log_path):
 		os.makedirs(log_path)
-	log_file = os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s/%s.html') % (locn, month)
+	log_file = os.path.expanduser('~/GoogleDrive/all_in_one/receipt_logs/%s/%s.%s.html') % (locn, month, year)
 	opener = open(log_file, 'wb')
 	opener.write(str(loggs))
 	opener.close()
@@ -64,7 +64,7 @@ class Mailer():
 
 
 		# print "You need to run list_to_html first!"
-		print "This is the receipt build for %s." % ( donation[0] )
+		#~ print "This is the receipt build for %s." % ( donation[0] )
 		lbs = str(int(donation[1]))
 		gals = str(int(donation[2]))
 		don = str(round(donation[3] , 2 ))
@@ -74,14 +74,12 @@ class Mailer():
 		
 		monthly_file_path = subprocess.check_output([finder], shell = True)
 		monthly_file_path = monthly_file_path[:-1]
-		print "\nLooking for:", monthly_file_path
+		#~ print "\nLooking for:", monthly_file_path
 		
 		# Gotta do some work on the HTML string
 		htmly = open(monthly_file_path, 'r')
 		html = str(htmly.read()) 
-		print "\n"
-		for i in donation:
-			print i
+		
 		html = html.replace("CONTACT_NAME", contact_name)
 		html = html.replace("GAL_THIS_MTH", gals)
 		html = html.replace("LOCATION_NAME", locname)
@@ -164,18 +162,17 @@ class Mailer():
 
 		# print msgRoot.as_string()
 		for_display = [donation[0], lbs, gals, don ,contact_email, contact_name]
-		this_month_display = tabulate([for_display], headers = ["Location", "LBS", "GALS", "Email", "Name"])
+		this_month_display = tabulate([for_display], headers = ["", "LBS", "GALS", "Donation" ,"Email", "Name"])
 		
 		summary_display = tabulate ([x for x in summary_q])
-		print "\nThis month's breakdown for:", donation[0] 
+		#~ print "\nThis month's breakdown for:", donation[0] , "\n"
 		print this_month_display
-		print "\nSummary: "
+		print "\nYTD Summary: "
 		print summary_display
 		
 		# Make sure to close the logo file. 
 		fp.close()
-		if self.send != 'yes':
-			print "\n\nYou did NOT send any emails."
+		
 		
 		return msgRoot.as_string()
 		# return for_display

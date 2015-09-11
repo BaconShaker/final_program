@@ -22,13 +22,14 @@ cursor = db.cursor()
 
 
 # Some generic functions
-def charities_dict():
+def charities_dict(texty = False):
 
 	cursor.execute("SELECT Name, Supporters from Charities")
 	ch = {x[0] : x[1].split(", ") for x in cursor.fetchall()}
-	print '\nCharities list: '
-	for c in ch:
-		print "	", c, ":", ch[c]
+	if texty:
+		print '\nCharities list: '
+		for c in ch:
+			print "	", c, ":", ch[c]
 	return ch
 
 def days_between(d1, d2):
@@ -46,13 +47,14 @@ def estimate_sale_date(gals, days, target = 6000):
 
 	
 
-def get_location_names():
+def get_location_names(texty = False):
 	# This little bugger makes the master names lists for other scripts
 	cursor.execute("SELECT `Name` FROM `Locations`")
 	namer = [n[0] for n in cursor.fetchall()]
-	print "\nLocations: "
-	for name in namer:
-		print "	",name
+	if texty:
+		print "\nLocations: "
+		for name in namer:
+			print "	",name
 	return namer
 
 
@@ -62,7 +64,7 @@ class Data_Manager():
 	charities = charities_dict()
 
 	def __init__(self):
-		print "\n\n have created a Data_Manager instance in", __name__
+		print "\n\n I have created a Data_Manager instance in", __name__
 
 	# Adds a dict or list of dicts to a table. 
 	def add_dict_to_db(self, tablename, rowdict):
@@ -160,9 +162,11 @@ class Data_Manager():
 
 	# Returns Charity string for Location	
 	def charity_lookup(self, location):
+		# Should put a try/except here for when you have a name in the gform that doesn't match the MAMP
 		query = 'SELECT `Charity` FROM Locations WHERE `Name` = "%s"' % (location)
 		cursor.execute(query)
 		charity_name = cursor.fetchall()
+		print "This is looking up the charity for:", location
 		return str(charity_name[0][0])
 
 	# 	*** NOT DONE ***
@@ -389,7 +393,7 @@ class Data_Manager():
 	# Establish route_info and return.
 	def get_location_details(self, place_to_lookup):
 		# Grab the Address, city zip and email... for the route maker
-		print place_to_lookup
+		#~ print place_to_lookup
 		squeeky = 'SELECT `Address`, `City`, `Zip`,`Email`, `Phone Number`, `Contact`, `Last Pickup`, `Charity`, ROUND(`Total Donation`), `Notes`, `Name`, `Total Gallons` FROM `Locations` WHERE `Name` LIKE \"%' + place_to_lookup[0:7] + '%\"'
 		cursor.execute(squeeky)
 		route_info = cursor.fetchall()
@@ -402,10 +406,8 @@ class Data_Manager():
 		# ROUND(SUM(`Collectable Material`), 0), 
 		smry = """SELECT 
 					MONTHNAME(`Pickup Date`) as "Month",
-		
 					ROUND(SUM(`Gallons Collected`), 0), 
 					ROUND(SUM(`Expected Donation`), 2)
-					
 				from Pickups 
 				where `Location` = "%s" 
 				group by Monthname(`Pickup Date`)
@@ -467,12 +469,10 @@ class Data_Manager():
 
 	
 	# Returns a list of all the donations/collections made in month
-	def sum_donations_by_month(self, month = last_month):
+	def sum_donations_by_month(self, month = last_month, texty = False):
 
 		# self.names()
 		doncursor = db.cursor()
-		print "\n\nThis is sum_donations_by_month(). "
-		print "Restaurants that are going to make donations in:", month, "\n"
 		
 		monthsql = """select 
 						`Location`, 
@@ -492,17 +492,17 @@ class Data_Manager():
 
 		doncursor.execute(monthsql)
 		grabber = doncursor.fetchall()
-		# print grabber
-		# monthly_donations = { key:(int(lbs), int(gallons), round(float(tot_donation),2) , charity) for key, lbs, gallons, tot_donation, cres_income, charity in  grabber }
-		# print "\n\nMonthly donations: " , monthly_donations
-		for rest in grabber:
-			print "	", rest[0] 
-		print ""	
-		# display_this = [[key, (int(lbs), int(gallons), round(float(tot_donation),2) , charity)] for key, lbs, gallons, tot_donation, charity in  grabber ]
-		print tabulate(grabber, headers = ["Location", "LBS", "Gallons", "Donation for " + month, "CRES Income",  "Charity"] )
 		
-		print "\nThe table should expand if you make the window larger. "
-
+		if texty:
+			print "\n\nThis is sum_donations_by_month(). "
+			print "Restaurants that are going to make donations in:", month, "\n"
+			for rest in grabber:
+				print "	", rest[0] 
+			print ""	
+		
+			print tabulate(grabber, headers = ["Location", "LBS", "Gallons", "Donation for " + month, "CRES Income",  "Charity"] )
+		
+			print "\nThe table should expand if you make the window larger. "
 
 		return grabber
 

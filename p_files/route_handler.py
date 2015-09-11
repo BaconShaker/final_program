@@ -219,6 +219,8 @@ class Route_Manager(object):
 
 	def add_collections_to_db(self, collections):
 		# Iterates through the collections to add them one dict at a time. 
+		self.all_at_once = False
+		legs = []
 		for stop in collections:
 			os.system('clear')
 			leg = stop.run_checks()
@@ -230,21 +232,32 @@ class Route_Manager(object):
 			print " 	Summary for", leg['Location']
 			print tabulate( [( e, leg[e] ) for e in leg] , ["Key", "Value"])
 		
-		
-			print "\nIs everything ok?"
-			print "If you say yes, I will add this leg only. You will have a chance to inspect the other legs as well. "
-			are_you_sure = raw_input('\nProceed, y/n?	')
-			if are_you_sure == 'y':
-
-				self.data.add_dict_to_db("Pickups", leg)
+			if self.all_at_once :
+				legs.append(leg)
 			else:
-				os.system('clear')
+				print "\nIs everything ok?"
+				print "If you say 'y', I will add this leg only. You will have a chance to inspect the other legs as well. "
+				print "If you say 'yes', I will add the entire route all at once** DOESNT WORK YET **. Blank = 'no'"
+			
+				are_you_sure = raw_input('\nProceed, y/n?	')
+				if are_you_sure == 'y':
+
+					self.data.add_dict_to_db("Pickups", leg)
+					
+				elif are_you_sure == 'yes':
+					self.all_at_once = True
+					legs.append(leg)
 				
+				else:
+					os.system('clear')
+					
 
-				print "\n\n 	****\n 	You elected not to add the", leg["Location"],  "leg of the collection."
-				print "	To add it, you have to re-run the program, just say no to the other legs.\n 	****"
+					print "\n\n 	****\n 	You elected not to add the", leg["Location"],  "leg of the collection."
+					print "	To add it, you have to re-run the program, just say no to the other legs.\n 	****"
 
-				time.sleep(3)
+					time.sleep(3)
+		# Basically, legs is a fixed form of Collections--the headers match the MAMP database
+		print tabulate(legs, headers = 'keys')	
 
 
 
