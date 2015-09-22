@@ -10,6 +10,16 @@ from __init__ import __sql__
 from gmapper import *
 import calendar
 from tabulate import tabulate
+from inventory import get_credentials
+import gspread
+import json
+from oauth2client.client import SignedJwtAssertionCredentials
+import os
+from oauth2client import client
+from oauth2client import tools
+import oauth2client
+from apiclient.discovery import build
+from httplib2 import Http
 
 # Set today, this month and last month variables.
 today = datetime.now()
@@ -56,6 +66,8 @@ def get_location_names(texty = False):
 		for name in namer:
 			print "	",name
 	return namer
+
+
 
 
 # The main event!
@@ -106,6 +118,78 @@ class Data_Manager():
 		db.commit()
 		
 		print "\n\n\nJolly good mate! I added the collections to the database, you're all good to go! "
+
+
+
+
+	def get_new_clients(self):
+		# Get Auth2 credentials
+		credentials = get_credentials() 
+		gc = gspread.authorize(credentials)
+
+		# open the Collection Details worksheet
+		wks = gc.open("Collection Details (Responses)")
+		
+		# get the form responses in Dictionary form
+		gform_responses = wks.worksheet("Form Responses 1").get_all_records()
+		new_clients = []
+
+		for row_dict in gform_responses:
+			# print row_dict
+			if row_dict["Add_type"] == "Add Client" and row_dict["Name"] not in self.location_names:
+				
+				# print "	" , row_dict
+				new_clients += [row_dict]
+
+		# print"\n These will be added:" 
+		# print "	" , gform_responses_by_date
+		
+
+		self.new_clients = new_clients
+
+
+	def add_new_clients(self):
+		self.get_new_clients()
+		if len(self.new_clients) > 0:
+			
+			for new_loc_dict in self.new_clients:
+				
+				if len(new_loc_dict['Client Notes']) == 0:
+					new_loc_dict['Client Notes'] = "Nothing to report"
+
+					
+				try:
+					new_loc_dict['Zip'] = int(new_loc_dict['Zip'])
+					
+					
+
+				except ValueError as error:
+					print "\n	 There seems to be a problem with the zip code from the GoogleSheet."
+					new_loc_dict['Zip'] = 111
+
+				try:
+					new_loc_dict['Dumpster'] = int(new_loc_dict['Dumpster'] )
+				except ValueError :
+					new_loc_dict['Dumpster'] = 000
+
+				try:
+					new_loc_dict['Quality'] = int(new_loc_dict['Quality'] )
+				except ValueError :
+					new_loc_dict['Quality'] = 0
+					
+					
+				self.add_dict_to_db("Locations", new_loc_dict)
+				print "I added", new_loc_dict, "to the database."
+		else:
+			print "There are no new clients to add nothing to add" 
+		
+
+
+
+
+
+
+		
 
 	# Return the sum of all donations made since the Dawn of CRES
 	def aggregate_donations(self):
@@ -339,6 +423,11 @@ class Data_Manager():
 		return stats
 
 
+
+
+
+
+
 	# Makes a list of Supporters for CRES.Charities for each Location. 
 	# Only writes to db if there are changes to be made. 
 	# Does NOT return anything, at most it will db.commit().
@@ -390,6 +479,10 @@ class Data_Manager():
 		else:
 			print "Mischief Managed... Supporters are all up to date."
 
+
+
+			
+
 	# Establish route_info and return.
 	def get_location_details(self, place_to_lookup):
 		# Grab the Address, city zip and email... for the route maker
@@ -399,6 +492,12 @@ class Data_Manager():
 		route_info = cursor.fetchall()
 		# print "Route info for", place_to_lookup, ": ", route_info[0], "\n"
 		return route_info[0]
+
+
+
+
+
+		
 
 	# Returns a monthly summary for location provided
 	def list_by_location(self, location):
@@ -425,7 +524,14 @@ class Data_Manager():
 				where MONTHNAME(`Pickup Date`) = '%s'
 				""" % (month)
 			)
-		print cursor.fetchall()		
+		print cursor.fetchall()
+
+
+
+
+
+
+		
 
 	# Looks for most recent pickup and UPDATES CRES.Locations
 	def set_last_pickup(self, chk = 1):
@@ -520,8 +626,8 @@ if __name__ == '__main__':
 	# donations = writer.sum_donations_by_month("August")
 	# summary = writer.list_by_location("Bellweather")
 	# writer.fix_supporters()
-	print writer.set_last_pickup()
-
+	#~ print writer.set_last_pickup()
+	print writer.add_new_clients()
 	# print writer.collection_analysis()
 	# print "This is donations"
 	# print "	", donations

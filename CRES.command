@@ -75,18 +75,21 @@ def main():
 	# Now that all the modules are in place, create a database instance 
 	# and pass it the proper config details from the config file. 
 
-
+	# Use this object to do general database transactions
 	database_main = Data_Manager()
+	# Could probably  make Routemanager below a Child of Data_manager
 	
 
 	route = Route_Manager(database_main)
 	collection_list = route.run_route() # LIST OF Collection instances
 
-	
 
 	route.add_collections_to_db(collection_list)
+	
+	database_main.add_new_clients()
 	database_main.average_donations()
 	database_main.collection_analysis()
+	database_main.set_last_pickup()
 	# database_main.fix_supporters()
 
 	
