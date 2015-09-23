@@ -122,7 +122,7 @@ class Data_Manager():
 
 
 
-	def get_new_clients(self):
+	def gform_lookup(self):
 		# Get Auth2 credentials
 		credentials = get_credentials() 
 		gc = gspread.authorize(credentials)
@@ -131,9 +131,11 @@ class Data_Manager():
 		wks = gc.open("Collection Details (Responses)")
 		
 		# get the form responses in Dictionary form
-		gform_responses = wks.worksheet("Form Responses 1").get_all_records()
-		new_clients = []
+		return wks.worksheet("Form Responses 1").get_all_records()
 
+	def add_new_clients(self):
+		new_clients = []
+		gform_responses = self.gform_lookup()
 		for row_dict in gform_responses:
 			# print row_dict
 			if row_dict["Add_type"] == "Add Client" and row_dict["Name"] not in self.location_names:
@@ -143,13 +145,12 @@ class Data_Manager():
 
 		# print"\n These will be added:" 
 		# print "	" , gform_responses_by_date
-		
+
+		print new_clients
 
 		self.new_clients = new_clients
 
 
-	def add_new_clients(self):
-		self.get_new_clients()
 		if len(self.new_clients) > 0:
 			
 			for new_loc_dict in self.new_clients:
@@ -179,17 +180,34 @@ class Data_Manager():
 					
 					
 				self.add_dict_to_db("Locations", new_loc_dict)
-				print "I added", new_loc_dict, "to the database."
+				print new_loc_dict, new_loc_dict.keys()
+				print "I added",new_loc_dict, "to the database."
 		else:
 			print "There are no new clients to add nothing to add" 
 		
 
 
 
-
-
-
-		
+	def update_dumpsters(self):
+		results = self.gform_lookup()
+		dumps = []
+		try:
+			
+			for resp in results:
+				if resp['Add_type'] == "Dumpster Drop":
+					resp['Drop-off Date'] = resp['Drop-off Date'].split("/")
+					resp['Drop-off Date'] = resp['Drop-off Date'][2] + '-' + resp['Drop-off Date'][0] + '-' + resp['Drop-off Date'][1]
+					print resp['Drop-off Date']
+					cursor.execute('UPDATE `Locations` SET `Dumpster`= %s,`Capacity`= %s , `Dump Drop` = DATE("%s") WHERE `Name` = "%s" ' %
+						( resp['Dumpster'], resp['Capacity'], resp['Drop-off Date'], resp['Establishment'])
+					)
+					db.commit()
+		except:
+			print "Something went wrong"
+			print "Here's dumps in update_dumpsters()", dumps
+			raise
+			
+		print dumps
 
 	# Return the sum of all donations made since the Dawn of CRES
 	def aggregate_donations(self):
@@ -628,6 +646,7 @@ if __name__ == '__main__':
 	# writer.fix_supporters()
 	#~ print writer.set_last_pickup()
 	print writer.add_new_clients()
+	writer.update_dumpsters()
 	# print writer.collection_analysis()
 	# print "This is donations"
 	# print "	", donations
