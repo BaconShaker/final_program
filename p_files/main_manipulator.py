@@ -68,7 +68,14 @@ def get_location_names(texty = False):
 	return namer
 
 
-
+def dumpster_situation():
+	cursor.execute(
+		"""SELECT `Name`, `Dumpster`, `Capacity` from `Locations`""")
+	dumps = cursor.fetchall()
+	dumps.sort(key=lambda tup: tup[0])
+	print "\n\nHere's a breakdown of the dumpster situation:\n"
+	print tabulate(dumps, headers = ["Location", "Dumpster", "Capacity"] )
+	print "\n\n"
 
 # The main event!
 class Data_Manager():
@@ -77,6 +84,10 @@ class Data_Manager():
 
 	def __init__(self):
 		print "\n\n I have created a Data_Manager instance in", __name__
+
+		dumpster_situation()
+		
+	
 
 	# Adds a dict or list of dicts to a table. 
 	def add_dict_to_db(self, tablename, rowdict):
@@ -124,6 +135,7 @@ class Data_Manager():
 
 	def gform_lookup(self):
 		# Get Auth2 credentials
+		print "Getting Credentials...\n"
 		credentials = get_credentials() 
 		gc = gspread.authorize(credentials)
 
@@ -132,6 +144,10 @@ class Data_Manager():
 		
 		# get the form responses in Dictionary form
 		return wks.worksheet("Form Responses 1").get_all_records()
+
+
+
+		
 
 	def add_new_clients(self):
 		new_clients = []
@@ -146,7 +162,6 @@ class Data_Manager():
 		# print"\n These will be added:" 
 		# print "	" , gform_responses_by_date
 
-		print new_clients
 
 		self.new_clients = new_clients
 
@@ -171,43 +186,63 @@ class Data_Manager():
 				try:
 					new_loc_dict['Dumpster'] = int(new_loc_dict['Dumpster'] )
 				except ValueError :
-					new_loc_dict['Dumpster'] = 000
+					new_loc_dict['Dumpster'] = int()
 
 				try:
 					new_loc_dict['Quality'] = int(new_loc_dict['Quality'] )
 				except ValueError :
-					new_loc_dict['Quality'] = 0
+					new_loc_dict['Quality'] = int()
+
+				try:
+					new_loc_dict['Capacity'] = int(new_loc_dict['Capacity'] )
+				except ValueError :
+					new_loc_dict['Capacity'] = int()
+					pass
 					
 					
 				self.add_dict_to_db("Locations", new_loc_dict)
 				print new_loc_dict, new_loc_dict.keys()
 				print "I added",new_loc_dict, "to the database."
 		else:
-			print "There are no new clients to add nothing to add" 
+			print "There are no new clients to add."
+		
 		
 
+	def check_dumpster_on_site(self, location):
+		cursor.execute(
+		"""SELECT `Name`, `Dumpster`, `Dump Drop`
+		FROM `Locations`
+		WHERE `Name` = "%s" """ % (location))
 
+		return cursor.fetchall()[0]
 
 	def update_dumpsters(self):
 		results = self.gform_lookup()
-		dumps = []
+	
+		
 		try:
 			
 			for resp in results:
 				if resp['Add_type'] == "Dumpster Drop":
-					resp['Drop-off Date'] = resp['Drop-off Date'].split("/")
-					resp['Drop-off Date'] = resp['Drop-off Date'][2] + '-' + resp['Drop-off Date'][0] + '-' + resp['Drop-off Date'][1]
-					print resp['Drop-off Date']
-					cursor.execute('UPDATE `Locations` SET `Dumpster`= %s,`Capacity`= %s , `Dump Drop` = DATE("%s") WHERE `Name` = "%s" ' %
-						( resp['Dumpster'], resp['Capacity'], resp['Drop-off Date'], resp['Establishment'])
-					)
-					db.commit()
+					on_site = self.check_dumpster_on_site(resp['Establishment'])
+					
+					if on_site[1] != resp['Dumpster']:
+						resp['Drop-off Date'] = resp['Drop-off Date'].split("/")
+						resp['Drop-off Date'] = resp['Drop-off Date'][2] + '-' + resp['Drop-off Date'][0] + '-' + resp['Drop-off Date'][1]
+						print "Updating the dumpster location for:", ( resp['Establishment'], resp['Dumpster'], resp['Capacity'], resp['Drop-off Date'])
+						cursor.execute('UPDATE `Locations` SET `Dumpster`= %s,`Capacity`= %s , `Dump Drop` = DATE("%s") WHERE `Name` = "%s" ' %
+							( resp['Dumpster'], resp['Capacity'], resp['Drop-off Date'], resp['Establishment'])
+						)
+						db.commit()
+					else:
+						print "There was already a record of dumpster %s being dropped at %s on %s." % (on_site[1], on_site[0], on_site[2])
+						
 		except:
 			print "Something went wrong"
 			print "Here's dumps in update_dumpsters()", dumps
 			raise
-			
-		print dumps
+
+
 
 	# Return the sum of all donations made since the Dawn of CRES
 	def aggregate_donations(self):
