@@ -9,6 +9,7 @@ from errors import *
 from attrdict import AttrDict
 from tabulate import tabulate
 import calendar
+import sys
 
 
 
@@ -145,26 +146,50 @@ class Location(AttrDict):
 			except:
 				print "The input list for the filter is not the right length"
 				raise
+
+
+def main(*args):
+	print "This is args:"
+	for ar in args:
+		print "	",str(ar)
+	
+	name = str(args[0][0])
+	print name
+	filters = ["Pickup Date", "Expected Income","Expected Revenue", "Expected Donation", "Quality", "Collectable Material", "Gallons Collected"]
+	loc = Location(name)
+	loc.pickup_lines(filtered = filters)
+
+
+
+	
 			
 if __name__ == "__main__":
 
-	
-	name = "Erie Cafe"
-	
-	# Location([name as string])
-	ro = Location(name)
-	
-	#	Available functions:
-	#		pickup_lines(start, stop, duration)
-	#			returns all pickups between dates or days back for duration.
-	#		all columns from Locations table in db are accessable from self or as attributes of Location()
+	inputs = sys.argv[1:]
 
-	
-	
-
-	filters = ["Pickup Date", "Expected Income","Expected Revenue", "Expected Donation", "Quality", "Collectable Material", "Gallons Collected"]
-	
-	ro.pickup_lines('02/01/2015', '09/03/2015', filters)
-		
+	if inputs:
+		main(inputs)
 
 		
+	else:
+
+		
+		name = "Erie Cafe"
+		
+		# Location([name as string])
+		ro = Location(name)
+		
+		#	Available functions:
+		#		pickup_lines(start, stop, duration)
+		#			returns all pickups between dates or days back for duration.
+		#		all columns from Locations table in db are accessable from self or as attributes of Location()
+
+		
+		
+
+		filters = ["Pickup Date", "Expected Income","Expected Revenue", "Expected Donation", "Quality", "Collectable Material", "Gallons Collected"]
+		
+		ro.pickup_lines('02/01/2015', '09/03/2015', filters)
+			
+
+			
