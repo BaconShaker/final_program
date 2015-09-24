@@ -5,7 +5,7 @@ import mysql.connector
 from datetime import *
 import numpy
 import math
-from __init__ import __sql__
+from __init__ import __sql__, __sql_robby__
 
 from gmapper import *
 import calendar
@@ -20,15 +20,23 @@ from oauth2client import tools
 import oauth2client
 from apiclient.discovery import build
 from httplib2 import Http
+from Location_class import *
 
 # Set today, this month and last month variables.
 today = datetime.now()
 this_month = calendar.month_name[today.month]
 last_month = calendar.month_name[today.month - 1]
 
-# Establish connection to SQL server.
-db = mysql.connector.connect(**__sql__)
-cursor = db.cursor()
+if os.environ['USER'] == "AsianCheddar":
+	# Establish connection to SQL server.
+	db = mysql.connector.connect(**__sql_robby__)
+	cursor = db.cursor()
+	print "Logged in as Robby\n"
+else:
+	# Establish connection to SQL server.
+	db = mysql.connector.connect(**__sql__)
+	cursor = db.cursor()
+	print "Logged in as Mike\n"
 
 
 # Some generic functions
@@ -236,7 +244,9 @@ class Data_Manager():
 						db.commit()
 					else:
 						print "There was already a record of dumpster %s being dropped at %s on %s." % (on_site[1], on_site[0], on_site[2])
-						
+
+				else:
+					print "There are no new Locations to add."		
 		except:
 			print "Something went wrong"
 			print "Here's dumps in update_dumpsters()", dumps
@@ -672,7 +682,7 @@ class Data_Manager():
 	
 
 if __name__ == '__main__':
-	writer = Data_Manager()
+	#~ writer = Data_Manager()
 	# writer.list_names()
 	# print writer.charity_lookup("Kappy's Diner & Pancake House")
 	# print r
@@ -680,8 +690,8 @@ if __name__ == '__main__':
 	# summary = writer.list_by_location("Bellweather")
 	# writer.fix_supporters()
 	#~ print writer.set_last_pickup()
-	print writer.add_new_clients()
-	writer.update_dumpsters()
+	#~ print writer.add_new_clients()
+	#~ writer.update_dumpsters()
 	# print writer.collection_analysis()
 	# print "This is donations"
 	# print "	", donations
@@ -691,6 +701,13 @@ if __name__ == '__main__':
 	# print "	", summary
 	# writer.aggregate_donations()
 	#~ writer.figure_next_sale()
+	name = "Erie Cafe"
+	
+	
+	ro = Location(name)
+	print ro.address, ro.charity
+	
 
 
 	# print writer. charity_checks_by_month()
+	
