@@ -64,6 +64,7 @@ while mods == 1:
 		print "Done updating pip. \nIf you're still getting an error, the problem is with GoogleDrive."
 		print "Hit control + option + 'c' to exit. Or just close the window."
 		print "******	******	******"
+		raise err
 
 	print "\n***************\nthis is outside the try and except but inside the while "
 
