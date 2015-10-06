@@ -233,7 +233,8 @@ class Route_Manager(object):
 			print tabulate( [( e, leg[e] ) for e in leg] , ["Key", "Value"])
 		
 			if self.all_at_once :
-				legs.append(leg)
+				print "You have added all the collections at once."
+				print "Skipping leg:", leg['Location']
 			else:
 				print "\nIs everything ok?"
 				print "If you say 'y', I will add this leg only. You will have a chance to inspect the other legs as well. "

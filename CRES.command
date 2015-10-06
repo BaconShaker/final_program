@@ -29,8 +29,8 @@ while mods == 1:
 
 		# Check if the database is up and running. 
 		from p_files.sql_ops import *
-		check_sql = CRES_SQL()
-		check_sql.is_running()
+		# check_sql = CRES_SQL()
+		# check_sql.is_running()
 
 		from tabulate import tabulate #makes the nice tables
 		import time #this is for any delays I want

@@ -25,8 +25,10 @@ def main():
 	else:
 		month = raw_input("	BLANK = " + last_month + " or type the monthname here... ")
 		ask = raw_input("\n\nType 'yes' to send receipts. Anything else will be rejected. ")
+
+	print ""
 		
-	if month == "":
+	if len(month) == 0:
 		month = last_month
 
 	master = Data_Manager()
@@ -41,7 +43,7 @@ def main():
 
 
 		contact = master.get_location_details( loc_name )
-		summary = master.list_by_location(loc_name)
+		summary = master.list_by_location(loc_name, month)
 		num_charities = len(master.charities)
 		agg_donation = master.aggregate_donations()
 

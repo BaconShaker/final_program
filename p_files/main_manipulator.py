@@ -5,7 +5,7 @@ import mysql.connector
 from datetime import *
 import numpy
 import math
-from __init__ import __sql__, __sql_robby__
+from __init__ import __mike__, __robby__
 
 from gmapper import *
 import calendar
@@ -20,7 +20,7 @@ from oauth2client import tools
 import oauth2client
 from apiclient.discovery import build
 from httplib2 import Http
-from Location_class import *
+# from Location_class import *
 
 # Set today, this month and last month variables.
 today = datetime.now()
@@ -29,14 +29,19 @@ last_month = calendar.month_name[today.month - 1]
 
 if os.environ['USER'] == "AsianCheddar":
 	# Establish connection to SQL server.
-	db = mysql.connector.connect(**__sql_robby__)
+	db = mysql.connector.connect(**__robby__)
 	cursor = db.cursor()
 	print "Logged in as Robby\n"
 else:
 	# Establish connection to SQL server.
-	db = mysql.connector.connect(**__sql__)
+	db = mysql.connector.connect(**__mike__)
 	cursor = db.cursor()
 	print "Logged in as Mike\n"
+
+# db = mysql.connector.connect(**__sqlrt__)
+# cursor = db.cursor()
+# print "Logged in as root\n"
+
 
 
 # Some generic functions
@@ -84,6 +89,7 @@ def dumpster_situation():
 	print "\n\nHere's a breakdown of the dumpster situation:\n"
 	print tabulate(dumps, headers = ["Location", "Dumpster", "Capacity"] )
 	print "\n\n"
+	return
 
 # The main event!
 class Data_Manager():
@@ -93,7 +99,7 @@ class Data_Manager():
 	def __init__(self):
 		print "\n\n I have created a Data_Manager instance in", __name__
 
-		dumpster_situation()
+		# self.dumpster_situation = dumpster_situation()
 		
 	
 
@@ -126,7 +132,7 @@ class Data_Manager():
 
 		os.system('clear')
 
-		# print "\n\n This is the SQL query: ", sql
+		print "\n\n This is the SQL query: ", sql
 
 		# As of 7/21 this part will add any collections in a list of collections
 		# to the database. I want to change that so it either doesn't add any unless the whole list 
@@ -562,8 +568,8 @@ class Data_Manager():
 
 		
 
-	# Returns a monthly summary for location provided
-	def list_by_location(self, location):
+	# Returns a monthly summary for location provided from BEFOR the stop month
+	def list_by_location(self, location, stop_month ):
 		# Make a summary sheet for location using information as detail specifier.
 		# ROUND(SUM(`Collectable Material`), 0), 
 		smry = """SELECT 
@@ -571,10 +577,10 @@ class Data_Manager():
 					ROUND(SUM(`Gallons Collected`), 0), 
 					ROUND(SUM(`Expected Donation`), 2)
 				from Pickups 
-				where `Location` = "%s" 
+				where `Location` = "%s" and MONTHNAME(`Pickup Date`) != '%s'
 				group by Monthname(`Pickup Date`)
 				order by DATE(`Pickup Date`) DESC
-				""" % (location)
+				""" % (location, stop_month)
 		# print smry
 		cursor.execute(smry)
 		return cursor.fetchall()
@@ -682,13 +688,13 @@ class Data_Manager():
 	
 
 if __name__ == '__main__':
-	#~ writer = Data_Manager()
+	writer = Data_Manager()
 	# writer.list_names()
 	# print writer.charity_lookup("Kappy's Diner & Pancake House")
 	# print r
 	# donations = writer.sum_donations_by_month("August")
 	# summary = writer.list_by_location("Bellweather")
-	# writer.fix_supporters()
+	writer.fix_supporters()
 	#~ print writer.set_last_pickup()
 	#~ print writer.add_new_clients()
 	#~ writer.update_dumpsters()
@@ -701,11 +707,11 @@ if __name__ == '__main__':
 	# print "	", summary
 	# writer.aggregate_donations()
 	#~ writer.figure_next_sale()
-	name = "Erie Cafe"
+	# name = "Erie Cafe"
 	
 	
-	ro = Location(name)
-	print ro.address, ro.charity
+	# ro = Location(name)
+	# print ro.address, ro.charity
 	
 
 

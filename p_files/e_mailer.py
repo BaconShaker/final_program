@@ -58,7 +58,11 @@ class Mailer():
 			total_donations = 0
 		contact_email = contact[3]
 		contact_name = contact[5]
-		contact_name = contact_name[:contact_name.index(" ")]
+		try:
+			contact_name = contact_name[:contact_name.index(" ")]
+		except ValueError as no_name:
+			print "There was either no name or only a first name in the contact field for %s" % contact[10]
+			contact_name = contact_name
 		total_gallons = contact[11]
 		locname = contact[10]
 
@@ -153,8 +157,8 @@ class Mailer():
 			# Also send a receipt copy to CRES email
 			smtp.sendmail(strFrom, strFrom, msgRoot.as_string())
 		else:
-			os.system('clear')
-			# print "\n\nYou did NOT send any emails."
+			print "_______________________"
+
 			
 		smtp.quit()
 		# print "\n\nHere is the email that was just sent:"
@@ -164,7 +168,7 @@ class Mailer():
 		for_display = [donation[0], lbs, gals, don ,contact_email, contact_name]
 		this_month_display = tabulate([for_display], headers = ["", "LBS", "GALS", "Donation" ,"Email", "Name"])
 		
-		summary_display = tabulate ([x for x in summary_q])
+		summary_display = tabulate ([x for x in summary_q], headers = [ "" , "Gallons" , "Donation" ])
 		#~ print "\nThis month's breakdown for:", donation[0] , "\n"
 		print this_month_display
 		print "\nYTD Summary: "

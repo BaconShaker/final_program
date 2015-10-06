@@ -5,7 +5,7 @@
 
 import os
 import mysql.connector
-from __init__ import __sql__
+from __init__ import  __robby__
 
 import gspread
 import json
@@ -18,7 +18,7 @@ from apiclient.discovery import build
 from httplib2 import Http
 
 # Establish connection to SQL server.
-db = mysql.connector.connect(**__sql__)
+db = mysql.connector.connect(**__robby__)
 cursor = db.cursor()
 
 
