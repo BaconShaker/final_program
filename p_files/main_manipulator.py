@@ -165,6 +165,7 @@ class Data_Manager():
 
 	def add_new_clients(self):
 		new_clients = []
+		print "From new clients:", self.location_names
 		gform_responses = self.gform_lookup()
 		for row_dict in gform_responses:
 			# print row_dict
@@ -694,9 +695,9 @@ if __name__ == '__main__':
 	# print r
 	# donations = writer.sum_donations_by_month("August")
 	# summary = writer.list_by_location("Bellweather")
-	writer.fix_supporters()
+	# writer.fix_supporters()
 	#~ print writer.set_last_pickup()
-	#~ print writer.add_new_clients()
+	print writer.add_new_clients()
 	#~ writer.update_dumpsters()
 	# print writer.collection_analysis()
 	# print "This is donations"
